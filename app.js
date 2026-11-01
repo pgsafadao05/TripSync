@@ -365,15 +365,19 @@
       if (!el.isConnected) return;
       const res = (r && r.resultados) || [];
       if (!res.length) { el.innerHTML = r ? '<span class="sub">' + esc(t('preco.sem')) + '</span>' : ''; return; }
-      const aprox = r.aproximado ? '<span class="sub">' + esc(t('preco.aprox')) + '</span>' : '';
+      // tipo: exato (ida e volta nas datas), mes (mesmo mês), ida (só ida no mês), referencia (rota em outra data)
+      const tipo = r.tipo || (r.aproximado ? 'mes' : 'exato');
       if (d.dst) {
-        const x = res[0], datas = r.aproximado ? diaCurto(x.ida) + ' → ' + diaCurto(x.volta) + ' · ' : '';
-        el.innerHTML = '<a class="preco-voo" href="' + esc(x.link || '#') + '" target="_blank" rel="noopener" data-compra="passagem" data-compra-k="' + esc(d.k) + '" data-compra-c="' + esc(d.c) + '">' +
-          '<b>' + esc(t('preco.aPartir', { v: dinheiro(x.preco, r.moeda) })) + '</b><span class="sub">' + esc(datas + (x.cia ? x.cia + ' · ' : '') + escalasTxt(x.escalas)) + ' ↗</span></a>' + aprox;
+        const x = res[0], datas = tipo === 'exato' ? '' : diaCurto(x.ida) + (x.volta ? ' → ' + diaCurto(x.volta) : '') + ' · ';
+        const titulo = t(tipo === 'ida' ? 'preco.soIda' : tipo === 'referencia' ? 'preco.referencia' : 'preco.aPartir', { v: dinheiro(x.preco, r.moeda) });
+        const href = tipo === 'exato' ? x.link : (r.busca || x.link);
+        el.innerHTML = '<a class="preco-voo" href="' + esc(href || '#') + '" target="_blank" rel="noopener" data-compra="passagem" data-compra-k="' + esc(d.k) + '" data-compra-c="' + esc(d.c) + '">' +
+          '<b>' + esc(titulo) + '</b><span class="sub">' + esc(datas + (x.cia ? x.cia + ' · ' : '') + escalasTxt(x.escalas)) + ' ↗</span></a>' +
+          (tipo !== 'exato' ? '<span class="sub">' + esc(t('preco.nota.' + tipo)) + '</span>' : '');
       } else {
-        el.innerHTML = '<div class="sub">' + esc(t('preco.destinos')) + '</div><div class="chips">' + res.slice(0, 8).map(x =>
+        el.innerHTML = '<div class="sub">' + esc(t(tipo === 'ida' ? 'preco.destinosIda' : 'preco.destinos')) + '</div><div class="chips">' + res.slice(0, 8).map(x =>
           '<button type="button" class="chip" data-destino="' + esc(x.destino) + '" data-destino-nome="' + esc(x.nome) + '" data-destino-k="' + esc(d.k) + '">' + bandeira(x.pais) + ' ' + esc(x.nome) +
-          ' <b>' + esc(dinheiro(x.preco, r.moeda)) + '</b></button>').join('') + '</div>' + aprox;
+          ' <b>' + esc(dinheiro(x.preco, r.moeda)) + '</b></button>').join('') + '</div>';
       }
     });
   }
