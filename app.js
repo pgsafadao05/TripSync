@@ -369,11 +369,15 @@
       const tipo = r.tipo || (r.aproximado ? 'mes' : 'exato');
       if (d.dst) {
         const x = res[0], datas = tipo === 'exato' ? '' : diaCurto(x.ida) + (x.volta ? ' → ' + diaCurto(x.volta) : '') + ' · ';
-        const titulo = t(tipo === 'ida' ? 'preco.soIda' : tipo === 'referencia' ? 'preco.referencia' : 'preco.aPartir', { v: dinheiro(x.preco, r.moeda) });
-        const href = tipo === 'exato' ? x.link : (r.busca || x.link);
+        // Só mostramos um preço como "seu" quando ele é das datas exatas da viagem; nos outros casos o destaque é o link
+        // para o preço de hoje e o valor visto em outra data aparece só como pista, com as datas dele.
+        const v = dinheiro(x.preco, r.moeda), exato = tipo === 'exato';
+        const base = exato ? x.link : (r.busca || x.link), href = base ? base + (base.includes('?') ? '&' : '?') + 'currency=' + String(r.moeda).toLowerCase() : null;
+        const titulo = exato ? t('preco.aPartir', { v }) : t('preco.verDatas');
+        const detalhe = exato ? (x.cia ? x.cia + ' · ' : '') + escalasTxt(x.escalas) : t('preco.pista.' + tipo, { v, d: datas.replace(/ · $/, '') });
         el.innerHTML = '<a class="preco-voo" href="' + esc(href || '#') + '" target="_blank" rel="noopener" data-compra="passagem" data-compra-k="' + esc(d.k) + '" data-compra-c="' + esc(d.c) + '">' +
-          '<b>' + esc(titulo) + '</b><span class="sub">' + esc(datas + (x.cia ? x.cia + ' · ' : '') + escalasTxt(x.escalas)) + ' ↗</span></a>' +
-          (tipo !== 'exato' ? '<span class="sub">' + esc(t('preco.nota.' + tipo)) + '</span>' : '');
+          '<b>' + esc(titulo) + ' ↗</b><span class="sub">' + esc(detalhe) + '</span></a>' +
+          '<span class="sub">' + esc(t(exato ? 'preco.nota.exato' : 'preco.nota.outra')) + '</span>';
       } else {
         el.innerHTML = '<div class="sub">' + esc(t(tipo === 'ida' ? 'preco.destinosIda' : 'preco.destinos')) + '</div><div class="chips">' + res.slice(0, 8).map(x =>
           '<button type="button" class="chip" data-destino="' + esc(x.destino) + '" data-destino-nome="' + esc(x.nome) + '" data-destino-k="' + esc(d.k) + '">' + bandeira(x.pais) + ' ' + esc(x.nome) +
