@@ -1,4 +1,4 @@
-/* Tripsync: escapadas nos feriados belgas, combinadas com amigos. Dados no Supabase (login, perfil, grupos). */
+/* Tripsync: escapadas nos feriados do país de cada pessoa, combinadas com amigos. Dados no Supabase (login, perfil, grupos). */
 (function () {
   const C = window.TRIPSYNC_CONFIG, F = window.Ferias;
   const sb = window.supabase.createClient(C.supabaseUrl, C.supabaseKey);
@@ -41,10 +41,9 @@
   // ---------- Login ----------
   function mostrarLogin(modo) {
     modoLogin = modo || modoLogin;
-    $('tela-login').hidden = false; $('tela-app').hidden = true; $('btnPerfil').hidden = true;
+    $('tela-login').hidden = false; $('tela-app').hidden = true; $('tela-cadastro').hidden = true; $('btnPerfil').hidden = true;
     const t = { entrar: ['Entrar', 'Entrar', 'Ainda não tenho conta'], criar: ['Criar conta', 'Criar conta', 'Já tenho conta'], 'nova-senha': ['Nova senha', 'Salvar senha', 'Voltar'] }[modoLogin];
     $('loginTitulo').textContent = t[0]; $('lBotao').textContent = t[1]; $('trocaModo').textContent = t[2];
-    $('campoNome').hidden = modoLogin !== 'criar';
     $('lEmail').closest('form').querySelector('label[for="lEmail"]').hidden = $('lEmail').hidden = modoLogin === 'nova-senha';
     $('lEmail').required = modoLogin !== 'nova-senha';
     $('lSenha').autocomplete = modoLogin === 'entrar' ? 'current-password' : 'new-password';
@@ -66,7 +65,7 @@
         const { error } = await sb.auth.signInWithPassword({ email, password: senha });
         if (error) throw error;
       } else if (modoLogin === 'criar') {
-        const { data, error } = await sb.auth.signUp({ email, password: senha, options: { data: { nome: $('lNome').value.trim() }, emailRedirectTo: location.origin + location.pathname } });
+        const { data, error } = await sb.auth.signUp({ email, password: senha, options: { emailRedirectTo: location.origin + location.pathname } });
         if (error) throw error;
         if (!data.session) msg('lMsg', 'Conta criada. Abra o e-mail que mandei para ' + email + ' e confirme para entrar.', 'ok');
       } else {
@@ -91,11 +90,93 @@
 
   async function entrar(session) {
     user = session.user;
-    $('tela-login').hidden = true; $('tela-app').hidden = false; $('btnPerfil').hidden = false;
+    $('tela-login').hidden = true;
     try { const a = +localStorage.getItem('tripsync:ano'); if (ANOS.includes(a)) ano = a; } catch (e) {}
     await carregarTudo();
+    if (!perfil.cadastro_completo) return mostrarCadastro();
+    await abrirApp();
+  }
+  async function abrirApp() {
+    $('tela-cadastro').hidden = true; $('tela-app').hidden = false; $('btnPerfil').hidden = false;
+    await prepararFeriados();
     irPara();
   }
+
+  // ---------- Feriados do país da pessoa ----------
+  // Na Bélgica (e em Luxemburgo) feriado que cai no fim de semana vira um dia de folga a mais.
+  const RECUPERA = new Set(['BE', 'LU']);
+  const ferCache = {};
+  const paisAtual = () => perfil.pais || 'BE';
+  async function prepararFeriados() {
+    const pais = paisAtual();
+    if (!ferCache[pais]) {
+      try { const r = await fetch('feriados/' + pais + '.json'); ferCache[pais] = r.ok ? await r.json() : {}; }
+      catch (e) { ferCache[pais] = {}; }
+    }
+    const d = ferCache[pais];
+    F.usarFeriados(y => d[y] || (pais === 'BE' ? F.feriadosBelgica(y) : []));
+  }
+  const ZONAS = { 'Europe/Brussels': 'BE', 'Europe/Lisbon': 'PT', 'Atlantic/Madeira': 'PT', 'Atlantic/Azores': 'PT', 'America/Sao_Paulo': 'BR', 'America/Fortaleza': 'BR',
+    'America/Recife': 'BR', 'America/Bahia': 'BR', 'America/Manaus': 'BR', 'America/Belem': 'BR', 'Europe/Paris': 'FR', 'Europe/Amsterdam': 'NL', 'Europe/Luxembourg': 'LU',
+    'Europe/Berlin': 'DE', 'Europe/Madrid': 'ES', 'Europe/London': 'GB', 'Europe/Dublin': 'IE', 'Europe/Rome': 'IT', 'Europe/Zurich': 'CH', 'Europe/Vienna': 'AT' };
+  function paisProvavel() { try { return ZONAS[Intl.DateTimeFormat().resolvedOptions().timeZone] || ''; } catch (e) { return ''; } }
+  function opcoesPais(sel, atual) {
+    sel.innerHTML = '<option value="">Escolha o país</option>' + (window.PAISES || []).slice().sort((a, b) => a[1].localeCompare(b[1], 'pt'))
+      .map(([a, n]) => '<option value="' + a + '"' + (a === atual ? ' selected' : '') + '>' + bandeira(a) + ' ' + esc(n) + '</option>').join('');
+  }
+  const deBruxelas = () => !perfil.cidade_base || ['bruxelas', 'brussels', 'bruxelles', 'brussel'].includes(norm(perfil.cidade_base));
+
+  // ---------- Cadastro em 2 passos (primeira entrada) ----------
+  let cadPaises = new Set(), mapaCadFeito = false;
+  function mostrarCadastro() {
+    $('tela-cadastro').hidden = false; $('tela-app').hidden = true; $('btnPerfil').hidden = true;
+    $('formCadastro').hidden = false; $('passoPaises').hidden = true;
+    $('cNome').value = perfil.nome || ''; $('cSobrenome').value = perfil.sobrenome || ''; $('cNasc').value = perfil.data_nascimento || '';
+    $('cCidade').value = perfil.cidade_base || ''; $('cDias').value = perfil.dias_ferias ?? ''; $('cTel').value = perfil.telefone || '';
+    $('cNasc').max = new Date().toISOString().slice(0, 10);
+    opcoesPais($('cPais'), perfil.pais || paisProvavel());
+    cadPaises = new Set(perfil.paises_visitados || []);
+    window.scrollTo(0, 0);
+  }
+  $('formCadastro').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const nasc = $('cNasc').value, idade = nasc ? (Date.now() - Date.parse(nasc)) / 3.15576e10 : 0;
+    if (idade < 10 || idade > 110) return msg('cMsg', 'Confira a data de nascimento.', 'erro');
+    const dias = +$('cDias').value;
+    if (!(dias >= 0 && dias <= 60)) return msg('cMsg', 'Dias de férias: um número entre 0 e 60.', 'erro');
+    msg('cMsg');
+    const ok = await salvarPerfil({ nome: $('cNome').value.trim(), sobrenome: $('cSobrenome').value.trim(), data_nascimento: nasc, pais: $('cPais').value,
+      cidade_base: $('cCidade').value.trim(), dias_ferias: Math.round(dias), telefone: $('cTel').value.trim() || null });
+    if (!ok) return msg('cMsg', 'Não consegui salvar. Tente de novo.', 'erro');
+    if (perfil.pais) cadPaises.add(perfil.pais); // o país onde mora já entra colorido no mapa
+    $('formCadastro').hidden = true; $('passoPaises').hidden = false; desenharCadPaises(); window.scrollTo(0, 0);
+  });
+  function desenharCadPaises() {
+    const M = window.MAPA;
+    if (M && !mapaCadFeito) {
+      $('mapaCad').setAttribute('viewBox', '0 0 ' + M.w + ' ' + M.h);
+      $('mapaCad').innerHTML = Object.entries(M.paises).map(([a, d]) => '<path class="p" data-a2="' + a + '" d="' + d + '"><title>' + esc(PAIS_NOME[a] || a) + '</title></path>').join('');
+      mapaCadFeito = true;
+    }
+    $('mapaCad').querySelectorAll('path.p').forEach(p => p.classList.toggle('foi', cadPaises.has(p.dataset.a2)));
+    $('nCad').textContent = cadPaises.size;
+    const q = norm($('buscaCad').value);
+    $('listaCad').innerHTML = (window.PAISES || []).filter(([a, n]) => !q || norm(n).includes(q)).sort((x, y) => x[1].localeCompare(y[1], 'pt'))
+      .map(([a, n]) => '<button type="button" class="chip" data-cad="' + a + '" aria-pressed="' + cadPaises.has(a) + '">' + bandeira(a) + ' ' + esc(n) + '</button>').join('')
+      || '<span class="sub">Nenhum país com esse nome.</span>';
+  }
+  const togCad = a => { cadPaises.has(a) ? cadPaises.delete(a) : cadPaises.add(a); desenharCadPaises(); };
+  $('listaCad').addEventListener('click', ev => { const b = ev.target.closest('[data-cad]'); if (b) togCad(b.dataset.cad); });
+  $('mapaCad').addEventListener('click', ev => { const p = ev.target.closest('path.p'); if (p) togCad(p.dataset.a2); });
+  $('buscaCad').addEventListener('input', desenharCadPaises);
+  $('voltarCad').onclick = () => { $('passoPaises').hidden = true; $('formCadastro').hidden = false; };
+  $('fimCad').onclick = async () => {
+    $('fimCad').disabled = true;
+    const ok = await salvarPerfil({ paises_visitados: [...cadPaises], cadastro_completo: true });
+    $('fimCad').disabled = false;
+    if (!ok) return msg('cMsg2', 'Não consegui salvar. Tente de novo.', 'erro');
+    location.hash = 'escapadas'; await abrirApp();
+  };
 
   // ---------- Dados ----------
   async function carregarTudo() {
@@ -105,7 +186,7 @@
       sb.from('grupos').select('*').order('created_at'),
     ]);
     if (p.error) msg('appMsg', 'Não consegui carregar seu perfil: ' + p.error.message, 'erro');
-    perfil = p.data || { id: user.id, dias_ferias: 20, feriados_ocultos: [], paises_visitados: [] };
+    perfil = p.data || { id: user.id, feriados_ocultos: [], paises_visitados: [] };
     visitados = v.data || []; grupos = g.data || [];
     await carregarPlanos();
     await carregarPerfisGrupo();
@@ -173,12 +254,12 @@
   function linksViagem(t, o, p) {
     const cid = CIDADES.find(c => norm(c.nome) === norm(p.cidade));
     const iata = (p.iata || (cid && cid.iata) || '').toUpperCase();
-    const voos = 'https://www.google.com/travel/flights?hl=pt-BR&q=' + encodeURIComponent('voos de Bruxelas para ' + (iata || p.cidade) + ' ida ' + o.inicio + ' volta ' + o.fim);
+    const voos = 'https://www.google.com/travel/flights?hl=pt-BR&q=' + encodeURIComponent('voos de ' + (perfil.cidade_base || 'Bruxelas') + ' para ' + (iata || p.cidade) + ' ida ' + o.inicio + ' volta ' + o.fim);
     const hotel = 'https://www.booking.com/searchresults.html?ss=' + encodeURIComponent(p.cidade) + '&checkin=' + o.inicio + '&checkout=' + o.fim + '&group_adults=1&no_rooms=1&nflt=ht_id%3D204';
     const agenda = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent('Viagem: ' + p.cidade) +
       '&dates=' + o.inicio.replace(/-/g, '') + '/' + diaSeg(o.fim).replace(/-/g, '') + '&location=' + encodeURIComponent(p.cidade) +
       '&details=' + encodeURIComponent('Escapada de ' + o.total + ' dias (' + t.feriado + '). Pedir folga: ' + (o.tirar.map(fmt).join(', ') || 'nenhum dia') + '. Criado pelo Tripsync.');
-    const trem = cid && /trem/.test(cid.voo);
+    const trem = cid && /trem/.test(cid.voo) && deBruxelas();
     return '<div class="acoes esq links">' + (trem ? '<a href="https://www.eurostar.com" target="_blank" rel="noopener">Trens (Eurostar) ↗</a>' : '<a href="' + voos + '" target="_blank" rel="noopener">Voos ↗</a>') +
       '<a href="' + hotel + '" target="_blank" rel="noopener">Hotéis, sem hostel ↗</a><a href="' + agenda + '" target="_blank" rel="noopener">Pôr na Google Agenda ↗</a></div>';
   }
@@ -188,12 +269,14 @@
   }
   function desenharEscapadas() {
     $('anos').innerHTML = ANOS.map(y => '<button type="button" data-ano="' + y + '" aria-pressed="' + (y === ano) + '">' + y + '</button>').join('');
-    const trips = F.cityTrips(ano), fds = F.feriadosBelgica(ano).filter(h => h.fimDeSemana), ORC = (perfil.dias_ferias ?? 20) + fds.length, g = gasto();
+    const pais = paisAtual(), todosFer = F.feriados(ano), trips = F.cityTrips(ano), dias = perfil.dias_ferias ?? 0;
+    const fds = RECUPERA.has(pais) ? todosFer.filter(h => h.fimDeSemana) : [], ORC = dias + fds.length, g = gasto();
     $('restam').textContent = ORC - g; $('restam').style.color = g > ORC ? 'var(--nao)' : '';
-    $('saldoTxt').textContent = 'dias livres · ' + (perfil.dias_ferias ?? 20) + ' de férias + ' + fds.length + ' feriados no fim de semana';
+    $('saldoTxt').textContent = 'dias livres · ' + dias + ' de férias' + (fds.length ? ' + ' + fds.length + (fds.length > 1 ? ' feriados no fim de semana' : ' feriado no fim de semana') : '') +
+      ' · feriados: ' + (PAIS_NOME[pais] || pais);
     const ocultos = new Set(perfil.feriados_ocultos || []);
     const escondida = t => ocultos.has(t.feriado) || (planos[t.id] && planos[t.id].status === 'agora-nao');
-    let html = '';
+    let html = todosFer.length ? '' : '<div class="aviso">Ainda não tenho os feriados de ' + esc(PAIS_NOME[pais] || pais) + ' para ' + ano + '. As escapadas abaixo usam só fins de semana.</div>';
     for (let m = 0; m < 12; m++) {
       if (ano === anoHoje && m < hoje.getMonth()) continue;
       const doMes = trips.filter(t => t.mes === m), vis = doMes.filter(t => !escondida(t));
@@ -209,7 +292,7 @@
             (L < 16 ? '<button type="button" data-dur="' + Math.max(6, L + 1) + '" aria-label="Esticar a viagem"><b>+</b></button>' : '') + '</div>' +
           (am ? '<div class="chips">' + am + '</div>' : '') +
           '<div class="form"><label for="c-' + t.id + '">Cidade que quero ir</label><input type="text" id="c-' + t.id + '" data-cidade value="' + esc(p.cidade || '') + '" placeholder="Escreva a cidade" autocomplete="off">' +
-            (cid.length ? '<div class="chips"><span class="sub">Ideias novas:</span>' + cid.map(c => '<button type="button" class="chip" data-ideia="' + esc(c.nome) + '">' + bandeira(c.a2) + ' ' + esc(c.nome) + ' <span class="sub">' + esc(c.voo) + '</span></button>').join('') + '</div>' : '') + '</div>' +
+            (cid.length ? '<div class="chips"><span class="sub">Ideias novas:</span>' + cid.map(c => '<button type="button" class="chip" data-ideia="' + esc(c.nome) + '">' + bandeira(c.a2) + ' ' + esc(c.nome) + (deBruxelas() ? ' <span class="sub">' + esc(c.voo) + '</span>' : '') + '</button>').join('') + '</div>' : '') + '</div>' +
           '<div class="acoes esq"><button type="button" class="ir" data-acao="vou">' + (vou ? '✓ Vou viajar' : 'Quero ir') + '</button>' +
             (vou ? '' : '<button type="button" class="leve" data-acao="agora-nao">Agora não</button><button type="button" class="leve" data-acao="ocultar">Não me interessa (todo ano)</button>') + '</div>' +
           (vou && p.cidade ? linksViagem(t, o, p) : vou ? '<div class="sub">Escreva a cidade para ver voos, hotéis e pôr na agenda.</div>' : '') +
@@ -369,15 +452,20 @@
 
   // ---------- Perfil ----------
   function desenharPerfil() {
-    $('pNome').value = perfil.nome || ''; $('pTel').value = perfil.telefone || ''; $('pNasc').value = perfil.data_nascimento || '';
-    $('pCidade').value = perfil.cidade_base || ''; $('pDias').value = perfil.dias_ferias ?? 20; $('pEmail').textContent = user.email;
+    $('pNome').value = perfil.nome || ''; $('pSobrenome').value = perfil.sobrenome || ''; opcoesPais($('pPais'), perfil.pais || ''); $('pTel').value = perfil.telefone || ''; $('pNasc').value = perfil.data_nascimento || '';
+    $('pCidade').value = perfil.cidade_base || ''; $('pDias').value = perfil.dias_ferias ?? ''; $('pEmail').textContent = user.email;
     const f = $('fotoPrev');
     if (perfil.foto_url) { f.style.backgroundImage = 'url("' + perfil.foto_url + '")'; f.textContent = ''; } else { f.style.backgroundImage = ''; f.textContent = iniciais(perfil.nome); }
   }
   $('formPerfil').addEventListener('submit', async ev => {
     ev.preventDefault();
-    const ok = await salvarPerfil({ nome: $('pNome').value.trim() || null, telefone: $('pTel').value.trim() || null, data_nascimento: $('pNasc').value || null,
+    const paisAntes = perfil.pais;
+    const ok = await salvarPerfil({ nome: $('pNome').value.trim() || null, sobrenome: $('pSobrenome').value.trim() || null, pais: $('pPais').value || null, telefone: $('pTel').value.trim() || null, data_nascimento: $('pNasc').value || null,
       cidade_base: $('pCidade').value.trim() || null, dias_ferias: Math.max(0, Math.min(60, +$('pDias').value || 0)) });
+    if (ok && perfil.pais !== paisAntes) {
+      await prepararFeriados();
+      if (perfil.pais && !(perfil.paises_visitados || []).includes(perfil.pais)) await salvarPerfil({ paises_visitados: [...(perfil.paises_visitados || []), perfil.pais] });
+    }
     msg('pMsg', ok ? 'Perfil salvo.' : 'Não consegui salvar.', ok ? 'ok' : 'erro'); desenhar();
   });
   $('pFoto').addEventListener('change', async () => {

@@ -31,7 +31,6 @@
         <input type="email" id="lEmail" required autocomplete="email">
         <label for="lSenha">Senha</label>
         <input type="password" id="lSenha" required minlength="8" autocomplete="current-password">
-        <div id="campoNome" hidden><label for="lNome">Seu nome</label><input type="text" id="lNome" autocomplete="name"></div>
         <button class="ir" type="submit" id="lBotao">Entrar</button>
         <p class="msg" id="lMsg" role="status"></p>
       </form>
@@ -39,6 +38,39 @@
         <button type="button" class="leve" id="trocaModo">Ainda não tenho conta</button>
         <button type="button" class="leve" id="esqueci">Esqueci a senha</button>
       </div>
+    </div>
+  </section>
+
+  <!-- Cadastro (primeira vez) -->
+  <section id="tela-cadastro" hidden>
+    <form class="cartao login form" id="formCadastro">
+      <p class="rotulo">Passo 1 de 2</p>
+      <h2>Seu perfil</h2>
+      <p class="sub">Cada pessoa tem dias de férias e feriados diferentes. Com isso as escapadas ficam certas pra você.</p>
+      <div class="dupla">
+        <div class="form"><label for="cNome">Nome</label><input type="text" id="cNome" required autocomplete="given-name"></div>
+        <div class="form"><label for="cSobrenome">Sobrenome</label><input type="text" id="cSobrenome" required autocomplete="family-name"></div>
+      </div>
+      <label for="cNasc">Data de nascimento</label><input type="date" id="cNasc" required>
+      <label for="cPais">País onde você mora</label><select id="cPais" required></select>
+      <span class="sub">Usado para saber os feriados do seu país.</span>
+      <label for="cCidade">Cidade de onde você sai para viajar</label><input type="text" id="cCidade" required placeholder="Ex.: Bruxelas" autocomplete="address-level2">
+      <label for="cDias">Dias de férias por ano</label><input type="number" id="cDias" required min="0" max="60" inputmode="numeric" placeholder="Ex.: 20">
+      <span class="sub">Só os dias úteis que você tem direito no trabalho, sem contar feriados.</span>
+      <label for="cTel">Telefone <span class="sub">(opcional)</span></label><input type="tel" id="cTel" autocomplete="tel">
+      <button class="ir" type="submit">Continuar</button>
+      <p class="msg" id="cMsg" role="status"></p>
+    </form>
+    <div class="cartao login form" id="passoPaises" hidden>
+      <p class="rotulo">Passo 2 de 2</p>
+      <h2>Onde você já foi?</h2>
+      <p class="sub">Marque os países que você já visitou. Assim eu não fico sugerindo lugar repetido.</p>
+      <div class="mapa-box"><svg id="mapaCad" role="img" aria-label="Mapa com os países marcados"></svg></div>
+      <p class="sub"><b id="nCad">0</b> países marcados</p>
+      <input type="text" id="buscaCad" placeholder="Buscar país" autocomplete="off" aria-label="Buscar país">
+      <div class="chips grade-paises" id="listaCad"></div>
+      <div class="acoes"><button type="button" class="leve" id="voltarCad">Voltar</button><button type="button" class="ir" id="fimCad">Pronto, entrar</button></div>
+      <p class="msg" id="cMsg2" role="status"></p>
     </div>
   </section>
 
@@ -89,9 +121,13 @@
           <label class="leve" for="pFoto" style="cursor:pointer">Trocar foto</label>
           <input type="file" id="pFoto" accept="image/jpeg,image/png,image/webp" hidden>
         </div>
-        <label for="pNome">Nome</label><input type="text" id="pNome" autocomplete="name">
+        <div class="dupla">
+          <div class="form"><label for="pNome">Nome</label><input type="text" id="pNome" autocomplete="given-name"></div>
+          <div class="form"><label for="pSobrenome">Sobrenome</label><input type="text" id="pSobrenome" autocomplete="family-name"></div>
+        </div>
         <label for="pTel">Telefone</label><input type="tel" id="pTel" autocomplete="tel" placeholder="+32 4xx xx xx xx">
         <label for="pNasc">Data de nascimento</label><input type="date" id="pNasc">
+        <label for="pPais">País onde você mora</label><select id="pPais"></select>
         <label for="pCidade">Cidade de onde você sai</label><input type="text" id="pCidade" placeholder="Bruxelas">
         <label for="pDias">Dias de férias por ano</label><input type="number" id="pDias" min="0" max="60">
         <button class="ir" type="submit">Salvar perfil</button>

@@ -31,10 +31,23 @@
     ].map(([t, nome]) => ({ data: iso(t), t, nome, fimDeSemana: dow(t) === 0 || dow(t) === 6 }));
   }
 
+  // Fonte de feriados trocável: por padrão Bélgica; o app troca pelo país da pessoa.
+  // fn(y) devolve [[data ISO, nome], ...] ou o formato de feriadosBelgica.
+  let fonte = null;
+  function usarFeriados(fn) { fonte = fn; cache.clear(); }
+  function feriados(y) {
+    if (!fonte) return feriadosBelgica(y);
+    return (fonte(y) || []).map(h => {
+      if (!Array.isArray(h)) return h;
+      const t = Date.parse(h[0] + 'T00:00:00Z');
+      return { data: h[0], t, nome: h[1], fimDeSemana: dow(t) === 0 || dow(t) === 6 };
+    });
+  }
+
   // Dias do ano Y (+ começo de janeiro de Y+1 para pontes de fim de ano)
   function montarDias(y) {
     const hol = new Map();
-    [...feriadosBelgica(y), ...feriadosBelgica(y + 1)].forEach(h => hol.set(h.data, h.nome));
+    [...feriados(y), ...feriados(y + 1)].forEach(h => { if (!hol.has(h.data)) hol.set(h.data, h.nome); });
     const dias = [];
     for (let t = utc(y, 0, 1); t <= utc(y + 1, 0, 10); t += DAY) {
       const d = iso(t), w = dow(t), fds = w === 0 || w === 6, feriado = hol.get(d) || null;
@@ -178,7 +191,12 @@
     return best;
   }
 
+  const cache = new Map();
   function cityTrips(y) {
+    if (!cache.has(y)) cache.set(y, calcCityTrips(y));
+    return cache.get(y);
+  }
+  function calcCityTrips(y) {
     const dias = montarDias(y);
     const out = [];
     dias.forEach((d, i) => {
@@ -206,5 +224,5 @@
     return { inicio: dias[w.s].data, fim: dias[w.e].data, total: w.e - w.s + 1, custo: w.custo, tirar, feriados };
   }
 
-  root.Ferias = { cityTrips, feriadosBelgica, montarDias, candidatos, otimizar, easter, iso };
+  root.Ferias = { cityTrips, feriados, usarFeriados, feriadosBelgica, montarDias, candidatos, otimizar, easter, iso };
 })(typeof window !== 'undefined' ? window : globalThis);

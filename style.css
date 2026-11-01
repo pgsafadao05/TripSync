@@ -102,3 +102,13 @@ input { font: inherit; color: var(--ink); background: var(--bg); border: 1px sol
 .mini { width: 26px; height: 26px; border-radius: 50%; background: var(--chip) center/cover; display: inline-grid; place-items: center; font-size: 12px; font-weight: 700; }
 .foto-linha { display: flex; align-items: center; gap: 14px; }
 .foto { width: 72px; height: 72px; border-radius: 50%; background: var(--chip) center/cover; display: grid; place-items: center; font: 700 26px var(--f-display); }
+
+select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; width: 100%; min-width: 0; }
+.dupla { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+#tela-cadastro .login { max-width: 520px; }
+.grade-paises { max-height: 320px; overflow-y: auto; align-content: start; }
+.grade-paises .chip[aria-pressed="true"] { background: var(--sol); color: var(--sol-ink); font-weight: 600; }
+#mapaCad { display: block; width: 100%; height: auto; }
+#mapaCad path.p { fill: var(--terra); stroke: var(--surface); stroke-width: .5; cursor: pointer; }
+#mapaCad path.p.foi { fill: var(--sol); }
+.aviso { font-size: 14px; border: 1px solid var(--sol); background: var(--sol-bg); border-radius: 12px; padding: 10px 14px; }
