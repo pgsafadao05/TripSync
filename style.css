@@ -112,3 +112,5 @@ select { font: inherit; color: var(--ink); background: var(--bg); border: 1px so
 #mapaCad path.p { fill: var(--terra); stroke: var(--surface); stroke-width: .5; cursor: pointer; }
 #mapaCad path.p.foi { fill: var(--sol); }
 .aviso { font-size: 14px; border: 1px solid var(--sol); background: var(--sol-bg); border-radius: 12px; padding: 10px 14px; }
+.topo-dir { display: flex; align-items: center; gap: 10px; }
+.idioma { width: auto; padding: 6px 8px; font-size: 13px; background: transparent; border-color: var(--line); color: var(--muted); }

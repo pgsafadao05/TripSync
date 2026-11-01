@@ -36,22 +36,23 @@
   let fonte = null;
   function usarFeriados(fn) { fonte = fn; cache.clear(); }
   function feriados(y) {
-    if (!fonte) return feriadosBelgica(y);
+    if (!fonte) return feriadosBelgica(y).map(h => Object.assign({ id: h.nome }, h));
+    // [data, nome no idioma, chave estável] — a chave não muda quando a pessoa troca o idioma
     return (fonte(y) || []).map(h => {
-      if (!Array.isArray(h)) return h;
+      if (!Array.isArray(h)) return Object.assign({ id: h.nome }, h);
       const t = Date.parse(h[0] + 'T00:00:00Z');
-      return { data: h[0], t, nome: h[1], fimDeSemana: dow(t) === 0 || dow(t) === 6 };
+      return { data: h[0], t, nome: h[1], id: h[2] || h[1], fimDeSemana: dow(t) === 0 || dow(t) === 6 };
     });
   }
 
   // Dias do ano Y (+ começo de janeiro de Y+1 para pontes de fim de ano)
   function montarDias(y) {
     const hol = new Map();
-    [...feriados(y), ...feriados(y + 1)].forEach(h => { if (!hol.has(h.data)) hol.set(h.data, h.nome); });
+    [...feriados(y), ...feriados(y + 1)].forEach(h => { if (!hol.has(h.data)) hol.set(h.data, h); });
     const dias = [];
     for (let t = utc(y, 0, 1); t <= utc(y + 1, 0, 10); t += DAY) {
-      const d = iso(t), w = dow(t), fds = w === 0 || w === 6, feriado = hol.get(d) || null;
-      dias.push({ t, data: d, dow: w, fds, feriado, util: !fds && !feriado, noAno: t < utc(y + 1, 0, 1) });
+      const d = iso(t), w = dow(t), fds = w === 0 || w === 6, h = hol.get(d), feriado = h ? h.nome : null;
+      dias.push({ t, data: d, dow: w, fds, feriado, feriadoId: h ? h.id : null, util: !fds && !feriado, noAno: t < utc(y + 1, 0, 1) });
     }
     return dias;
   }
@@ -213,7 +214,7 @@
         const score = o.custo === 0 ? 100 + L : L / o.custo;
         if (score > bestScore + 1e-9) { bestScore = score; padrao = L; }
       }
-      out.push({ id: d.data, feriado: d.feriado, data: d.data, mes: new Date(d.t).getUTCMonth(), padrao, opcoes });
+      out.push({ id: d.data, feriado: d.feriado, chave: d.feriadoId, data: d.data, mes: new Date(d.t).getUTCMonth(), padrao, opcoes });
     });
     return out;
   }

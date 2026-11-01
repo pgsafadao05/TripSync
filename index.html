@@ -18,25 +18,28 @@
 <div class="wrap">
   <header class="topo">
     <h1>Tripsync</h1>
-    <button type="button" id="btnPerfil" class="avatar-btn" hidden aria-label="Meu perfil"></button>
+    <div class="topo-dir">
+      <select id="idiomaTopo" class="idioma" data-i18n-aria="idioma"></select>
+      <button type="button" id="btnPerfil" class="avatar-btn" hidden data-i18n-aria="aria.perfil"></button>
+    </div>
   </header>
 
   <!-- Entrar / criar conta -->
   <section id="tela-login" hidden>
     <div class="cartao login">
-      <h2 id="loginTitulo">Entrar</h2>
-      <p class="sub">Escapadas nos feriados, combinadas com seus amigos.</p>
+      <h2 id="loginTitulo"></h2>
+      <p class="sub" data-i18n="app.sub"></p>
       <form id="formLogin" class="form">
-        <label for="lEmail">E-mail</label>
+        <label for="lEmail" data-i18n="email"></label>
         <input type="email" id="lEmail" required autocomplete="email">
-        <label for="lSenha">Senha</label>
+        <label for="lSenha" data-i18n="senha"></label>
         <input type="password" id="lSenha" required minlength="8" autocomplete="current-password">
-        <button class="ir" type="submit" id="lBotao">Entrar</button>
+        <button class="ir" type="submit" id="lBotao"></button>
         <p class="msg" id="lMsg" role="status"></p>
       </form>
       <div class="acoes">
-        <button type="button" class="leve" id="trocaModo">Ainda não tenho conta</button>
-        <button type="button" class="leve" id="esqueci">Esqueci a senha</button>
+        <button type="button" class="leve" id="trocaModo"></button>
+        <button type="button" class="leve" id="esqueci" data-i18n="esqueci"></button>
       </div>
     </div>
   </section>
@@ -44,72 +47,72 @@
   <!-- Cadastro (primeira vez) -->
   <section id="tela-cadastro" hidden>
     <form class="cartao login form" id="formCadastro">
-      <p class="rotulo">Passo 1 de 2</p>
-      <h2>Seu perfil</h2>
-      <p class="sub">Cada pessoa tem dias de férias e feriados diferentes. Com isso as escapadas ficam certas pra você.</p>
+      <p class="rotulo" data-i18n="cad.passo1"></p>
+      <h2 data-i18n="cad.titulo"></h2>
+      <p class="sub" data-i18n="cad.sub"></p>
       <div class="dupla">
-        <div class="form"><label for="cNome">Nome</label><input type="text" id="cNome" required autocomplete="given-name"></div>
-        <div class="form"><label for="cSobrenome">Sobrenome</label><input type="text" id="cSobrenome" required autocomplete="family-name"></div>
+        <div class="form"><label for="cNome" data-i18n="nome"></label><input type="text" id="cNome" required autocomplete="given-name"></div>
+        <div class="form"><label for="cSobrenome" data-i18n="sobrenome"></label><input type="text" id="cSobrenome" required autocomplete="family-name"></div>
       </div>
-      <label for="cNasc">Data de nascimento</label><input type="date" id="cNasc" required>
-      <label for="cPais">País onde você mora</label><select id="cPais" required></select>
-      <span class="sub">Usado para saber os feriados do seu país.</span>
-      <label for="cCidade">Cidade de onde você sai para viajar</label><input type="text" id="cCidade" required placeholder="Ex.: Bruxelas" autocomplete="address-level2">
-      <label for="cDias">Dias de férias por ano</label><input type="number" id="cDias" required min="0" max="60" inputmode="numeric" placeholder="Ex.: 20">
-      <span class="sub">Só os dias úteis que você tem direito no trabalho, sem contar feriados.</span>
-      <label for="cTel">Telefone <span class="sub">(opcional)</span></label><input type="tel" id="cTel" autocomplete="tel">
-      <button class="ir" type="submit">Continuar</button>
+      <label for="cNasc" data-i18n="nasc"></label><input type="date" id="cNasc" required>
+      <label for="cPais" data-i18n="pais"></label><select id="cPais" required></select>
+      <span class="sub" data-i18n="cad.paisDica"></span>
+      <label for="cCidade" data-i18n="cidade"></label><input type="text" id="cCidade" required data-i18n-ph="cidade.ph" autocomplete="address-level2">
+      <label for="cDias" data-i18n="dias"></label><input type="number" id="cDias" required min="0" max="60" inputmode="numeric" data-i18n-ph="dias.ph">
+      <span class="sub" data-i18n="cad.diasDica"></span>
+      <label for="cTel"><span data-i18n="telefone"></span> <span class="sub" data-i18n="opcional"></span></label><input type="tel" id="cTel" autocomplete="tel">
+      <button class="ir" type="submit" data-i18n="continuar"></button>
       <p class="msg" id="cMsg" role="status"></p>
     </form>
     <div class="cartao login form" id="passoPaises" hidden>
-      <p class="rotulo">Passo 2 de 2</p>
-      <h2>Onde você já foi?</h2>
-      <p class="sub">Marque os países que você já visitou. Assim eu não fico sugerindo lugar repetido.</p>
-      <div class="mapa-box"><svg id="mapaCad" role="img" aria-label="Mapa com os países marcados"></svg></div>
-      <p class="sub"><b id="nCad">0</b> países marcados</p>
-      <input type="text" id="buscaCad" placeholder="Buscar país" autocomplete="off" aria-label="Buscar país">
+      <p class="rotulo" data-i18n="cad.passo2"></p>
+      <h2 data-i18n="cad.titulo2"></h2>
+      <p class="sub" data-i18n="cad.sub2"></p>
+      <div class="mapa-box"><svg id="mapaCad" role="img" data-i18n-aria="aria.mapa"></svg></div>
+      <p class="sub"><b id="nCad">0</b> <span data-i18n="cad.marcados"></span></p>
+      <input type="text" id="buscaCad" data-i18n-ph="buscaPais" autocomplete="off" data-i18n-aria="buscaPais">
       <div class="chips grade-paises" id="listaCad"></div>
-      <div class="acoes"><button type="button" class="leve" id="voltarCad">Voltar</button><button type="button" class="ir" id="fimCad">Pronto, entrar</button></div>
+      <div class="acoes"><button type="button" class="leve" id="voltarCad" data-i18n="voltar"></button><button type="button" class="ir" id="fimCad" data-i18n="cad.fim"></button></div>
       <p class="msg" id="cMsg2" role="status"></p>
     </div>
   </section>
 
   <!-- App -->
   <section id="tela-app" hidden>
-    <nav class="abas" aria-label="Seções">
-      <a href="#escapadas" data-aba="escapadas">Escapadas</a>
-      <a href="#jafui" data-aba="jafui">Já fui</a>
-      <a href="#grupos" data-aba="grupos">Amigos</a>
-      <a href="#perfil" data-aba="perfil">Perfil</a>
+    <nav class="abas" data-i18n-aria="aria.secoes">
+      <a href="#escapadas" data-aba="escapadas" data-i18n="aba.escapadas"></a>
+      <a href="#jafui" data-aba="jafui" data-i18n="aba.jafui"></a>
+      <a href="#grupos" data-aba="grupos" data-i18n="aba.amigos"></a>
+      <a href="#perfil" data-aba="perfil" data-i18n="aba.perfil"></a>
     </nav>
     <p class="msg" id="appMsg" role="status"></p>
 
     <div id="aba-escapadas" class="aba">
       <div class="topo2">
-        <div class="saldo"><b id="restam">23</b><span id="saldoTxt">dias livres</span></div>
-        <div class="pill" id="anos" role="group" aria-label="Ano"></div>
+        <div class="saldo"><b id="restam"></b><span id="saldoTxt"></span></div>
+        <div class="pill" id="anos" role="group" data-i18n-aria="aria.ano"></div>
       </div>
       <div id="lista" class="lista"></div>
     </div>
 
     <div id="aba-jafui" class="aba" hidden>
       <div class="cartao">
-        <div class="numeros"><div><b id="nPaises">0</b><span>países</span></div><div><b id="nPct">0%</b><span>do mundo</span></div><div><b id="nCidades">0</b><span>cidades</span></div></div>
-        <div class="mapa-box"><svg id="mapa" role="img" aria-label="Mapa-múndi com os países visitados"></svg></div>
+        <div class="numeros"><div><b id="nPaises">0</b><span data-i18n="paises"></span></div><div><b id="nPct">0%</b><span data-i18n="doMundo"></span></div><div><b id="nCidades">0</b><span data-i18n="cidades"></span></div></div>
+        <div class="mapa-box"><svg id="mapa" role="img" data-i18n-aria="aria.mapa"></svg></div>
       </div>
       <div class="cartao">
-        <h3 id="tituloLista">Onde você já foi?</h3>
-        <input type="text" id="buscaPais" placeholder="Buscar país" autocomplete="off" aria-label="Buscar país">
+        <h3 id="tituloLista"></h3>
+        <input type="text" id="buscaPais" data-i18n-ph="buscaPais" autocomplete="off" data-i18n-aria="buscaPais">
         <ul class="limpa lista-paises" id="listaPaises"></ul>
       </div>
     </div>
 
     <div id="aba-grupos" class="aba" hidden>
       <div class="cartao">
-        <h3>Seus grupos</h3>
+        <h3 data-i18n="seusGrupos"></h3>
         <div id="meusGrupos"></div>
-        <form id="formCriarGrupo" class="linha-form"><input type="text" id="gNome" placeholder="Nome do grupo (ex.: Galera de Bruxelas)" required aria-label="Nome do grupo"><button class="ir" type="submit">Criar</button></form>
-        <form id="formEntrarGrupo" class="linha-form"><input type="text" id="gCodigo" placeholder="Código de convite" required maxlength="6" aria-label="Código de convite" style="text-transform:uppercase"><button class="ir" type="submit">Entrar</button></form>
+        <form id="formCriarGrupo" class="linha-form"><input type="text" id="gNome" data-i18n-ph="grupo.ph" required data-i18n-aria="aria.grupo"><button class="ir" type="submit" data-i18n="criar"></button></form>
+        <form id="formEntrarGrupo" class="linha-form"><input type="text" id="gCodigo" data-i18n-ph="codigo.ph" required maxlength="6" data-i18n-aria="codigo.ph" style="text-transform:uppercase"><button class="ir" type="submit" data-i18n="entrar"></button></form>
       </div>
       <div id="grupoDetalhe"></div>
     </div>
@@ -118,27 +121,29 @@
       <form class="cartao form" id="formPerfil">
         <div class="foto-linha">
           <div class="foto" id="fotoPrev"></div>
-          <label class="leve" for="pFoto" style="cursor:pointer">Trocar foto</label>
+          <label class="leve" for="pFoto" style="cursor:pointer" data-i18n="trocarFoto"></label>
           <input type="file" id="pFoto" accept="image/jpeg,image/png,image/webp" hidden>
         </div>
         <div class="dupla">
-          <div class="form"><label for="pNome">Nome</label><input type="text" id="pNome" autocomplete="given-name"></div>
-          <div class="form"><label for="pSobrenome">Sobrenome</label><input type="text" id="pSobrenome" autocomplete="family-name"></div>
+          <div class="form"><label for="pNome" data-i18n="nome"></label><input type="text" id="pNome" autocomplete="given-name"></div>
+          <div class="form"><label for="pSobrenome" data-i18n="sobrenome"></label><input type="text" id="pSobrenome" autocomplete="family-name"></div>
         </div>
-        <label for="pTel">Telefone</label><input type="tel" id="pTel" autocomplete="tel" placeholder="+32 4xx xx xx xx">
-        <label for="pNasc">Data de nascimento</label><input type="date" id="pNasc">
-        <label for="pPais">País onde você mora</label><select id="pPais"></select>
-        <label for="pCidade">Cidade de onde você sai</label><input type="text" id="pCidade" placeholder="Bruxelas">
-        <label for="pDias">Dias de férias por ano</label><input type="number" id="pDias" min="0" max="60">
-        <button class="ir" type="submit">Salvar perfil</button>
+        <label for="pTel" data-i18n="telefone"></label><input type="tel" id="pTel" autocomplete="tel" placeholder="+32 4xx xx xx xx">
+        <label for="pNasc" data-i18n="nasc"></label><input type="date" id="pNasc">
+        <label for="pPais" data-i18n="pais"></label><select id="pPais"></select>
+        <label for="pCidade" data-i18n="cidadeSai"></label><input type="text" id="pCidade" data-i18n-ph="cidade.ph">
+        <label for="pDias" data-i18n="dias"></label><input type="number" id="pDias" min="0" max="60">
+        <label for="pIdioma" data-i18n="idioma"></label><select id="pIdioma"></select>
+        <button class="ir" type="submit" data-i18n="salvarPerfil"></button>
         <p class="msg" id="pMsg" role="status"></p>
       </form>
-      <div class="acoes"><span class="sub" id="pEmail"></span><button type="button" class="leve" id="sair">Sair</button></div>
+      <div class="acoes"><span class="sub" id="pEmail"></span><button type="button" class="leve" id="sair" data-i18n="sair"></button></div>
     </div>
   </section>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="i18n.js"></script>
 <script src="mapa.js"></script>
 <script src="core.js"></script>
 <script src="config.js"></script>
