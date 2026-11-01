@@ -141,3 +141,18 @@ select { font: inherit; color: var(--ink); background: var(--bg); border: 1px so
 .lista-viagens { display: grid; gap: 12px; }
 .passadas summary { cursor: pointer; color: var(--muted); font-weight: 600; padding: 6px 0; }
 .passadas[open] { display: grid; gap: 12px; }
+
+/* Gastos */
+.gastos { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+.gastos-topo { display: flex; justify-content: space-between; align-items: baseline; }
+.gastos-topo b { font-family: var(--f-display); font-size: 19px; font-variant-numeric: tabular-nums; }
+.gasto { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center; padding-block: 6px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.g-valor { font-variant-numeric: tabular-nums; font-weight: 600; }
+.g-tipo { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.chip.st-comprado { background: var(--ok-bg); color: var(--ok); }
+.chip.st-reservado { background: var(--sol-bg); color: var(--sol-ink); }
+.chip.st-previsto { background: var(--chip); color: var(--muted); }
+.form-gasto { display: grid; gap: 6px; }
+.form-gasto label { font-size: 13px; font-weight: 600; color: var(--muted); }
+.total-ano { color: var(--ink); }
+.gastos > .leve { justify-self: start; }

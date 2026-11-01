@@ -256,6 +256,8 @@
   }
   async function apagarPlano(tripId) {
     delete planos[tripId]; if (todosPlanos) todosPlanos = todosPlanos.filter(r => r.trip_id !== tripId); planosGrupo = planosGrupo.filter(r => !(r.user_id === user.id && r.trip_id === tripId)); desenhar();
+    gastos = gastos.filter(g => g.trip_id !== tripId);
+    await sb.from('gastos').delete().eq('user_id', user.id).eq('trip_id', tripId);
     const { error } = await sb.from('planos').delete().eq('user_id', user.id).eq('trip_id', tripId);
     if (error) msg('appMsg', t('err.salvarE', { e: error.message }), 'erro');
   }
@@ -472,11 +474,41 @@
   });
 
   // ---------- Minhas viagens (lista + calendário) ----------
-  let todosPlanos = null, anoCal = null;
+  let todosPlanos = null, anoCal = null, gastos = [], gastoAberto = null;
   async function carregarTodosPlanos() {
-    const { data, error } = await sb.from('planos').select('*').eq('user_id', user.id).eq('status', 'vou');
-    if (error) msg('appMsg', t('err.viagens', { e: error.message }), 'erro');
-    todosPlanos = data || [];
+    const [r, g] = await Promise.all([
+      sb.from('planos').select('*').eq('user_id', user.id).eq('status', 'vou'),
+      sb.from('gastos').select('*').eq('user_id', user.id).order('created_at'),
+    ]);
+    if (r.error) msg('appMsg', t('err.viagens', { e: r.error.message }), 'erro');
+    todosPlanos = r.data || []; gastos = g.data || [];
+  }
+  // ---------- Gastos da viagem ----------
+  const TIPOS = ['passagem', 'hotel', 'transporte', 'comida', 'passeio', 'outro'], STATUS = ['comprado', 'reservado', 'previsto'];
+  const MOEDAS = ['EUR', 'BRL', 'GBP', 'USD', 'CHF'];
+  const EURO = new Set(['AT','BE','HR','CY','EE','FI','FR','DE','GR','IE','IT','LV','LT','LU','MT','NL','PT','SK','SI','ES','AD','MC','SM','VA','ME','XK']);
+  const moedaPadrao = () => { const p = paisAtual(); return EURO.has(p) ? 'EUR' : ({ BR: 'BRL', GB: 'GBP', US: 'USD', CH: 'CHF', LI: 'CHF' })[p] || 'EUR'; };
+  const dinheiro = (v, m) => { try { return new Intl.NumberFormat(loc(), { style: 'currency', currency: m }).format(v); } catch (e) { return m + ' ' + (+v).toFixed(2); } };
+  const somaMoedas = lista => { const tot = {}; lista.forEach(g => { tot[g.moeda] = (tot[g.moeda] || 0) + +g.valor; }); return Object.entries(tot).map(([m, v]) => dinheiro(v, m)).join(' + '); };
+  const gastosDe = p => gastos.filter(g => g.trip_id === p.trip_id && g.ano === p.ano);
+  function blocoGastos(p) {
+    const k = p.ano + '|' + p.trip_id, gs = gastosDe(p);
+    let h = '<div class="gastos" data-gk="' + esc(k) + '"><div class="gastos-topo"><span class="rotulo">' + esc(t('gastos.titulo')) + '</span>' +
+      (gs.length ? '<b>' + esc(somaMoedas(gs)) + '</b>' : '') + '</div>';
+    h += gs.length ? '<ul class="limpa">' + gs.map(g => '<li class="gasto"><span class="g-tipo">' + esc(t('tp.' + g.tipo)) + (g.descricao ? ' <span class="sub">· ' + esc(g.descricao) + '</span>' : '') + '</span>' +
+      '<span class="chip st-' + g.status + '">' + esc(t('st.' + g.status)) + '</span><span class="g-valor">' + esc(dinheiro(g.valor, g.moeda)) + '</span>' +
+      '<button type="button" class="tag-x" data-del-gasto="' + g.id + '" aria-label="' + esc(t('apagar')) + '">×</button></li>').join('') + '</ul>' : '<p class="sub">' + esc(t('gastos.vazio')) + '</p>';
+    if (gastoAberto === k) {
+      h += '<form class="form-gasto" data-form-gasto>' +
+        '<div class="dupla"><div class="form"><label for="g-tipo">' + esc(t('gastos.tipo')) + '</label><select id="g-tipo">' + TIPOS.map(x => '<option value="' + x + '">' + esc(t('tp.' + x)) + '</option>').join('') + '</select></div>' +
+        '<div class="form"><label for="g-status">' + esc(t('gastos.status')) + '</label><select id="g-status">' + STATUS.map(x => '<option value="' + x + '">' + esc(t('st.' + x)) + '</option>').join('') + '</select></div></div>' +
+        '<div class="dupla"><div class="form"><label for="g-valor">' + esc(t('gastos.valor')) + '</label><input type="number" id="g-valor" min="0" step="0.01" inputmode="decimal" required></div>' +
+        '<div class="form"><label for="g-moeda">' + esc(t('gastos.moeda')) + '</label><select id="g-moeda">' + MOEDAS.map(m => '<option' + (m === moedaPadrao() ? ' selected' : '') + '>' + m + '</option>').join('') + '</select></div></div>' +
+        '<label for="g-desc">' + esc(t('gastos.desc')) + '</label><input type="text" id="g-desc" maxlength="120" placeholder="' + esc(t('gastos.desc.ph')) + '">' +
+        '<div class="acoes esq"><button type="submit" class="ir">' + esc(t('gastos.salvar')) + '</button><button type="button" class="leve" data-fechar-gasto>' + esc(t('cancelar')) + '</button></div>' +
+        '<p class="msg" id="gMsg" role="status"></p></form>';
+    } else h += '<button type="button" class="leve" data-abrir-gasto="' + esc(k) + '">' + esc(t('gastos.add')) + '</button>';
+    return h + '</div>';
   }
   function viagensMarcadas() {
     const mapa = new Map((todosPlanos || []).map(p => [p.ano + '|' + p.trip_id, p]));
@@ -500,7 +532,8 @@
     $('vResumo').innerHTML = !vs.length ? '<p class="sub">' + esc(t('viagens.nenhuma')) + '</p>' :
       (prox ? '<div class="rotulo">' + esc(agora ? t('viagens.agora') : t('viagens.proxima')) + '</div><div class="proxima"><b>' + esc(nomeV(prox)) + '</b><span>' +
         esc(agora ? fmt(prox.o.inicio) + ' → ' + fmt(prox.o.fim) : diasAte(prox.o.inicio) === 1 ? t('viagens.amanha') : t('viagens.emDias', { n: diasAte(prox.o.inicio) })) + '</span></div>' : '') +
-      '<p class="sub">' + esc(t(doAno.length === 1 ? 'viagens.resumo1' : 'viagens.resumo', { n: doAno.length, d: doAno.reduce((s, v) => s + v.o.custo, 0), ano: anoCal })) + '</p>';
+      '<p class="sub">' + esc(t(doAno.length === 1 ? 'viagens.resumo1' : 'viagens.resumo', { n: doAno.length, d: doAno.reduce((s, v) => s + v.o.custo, 0), ano: anoCal })) + '</p>' +
+      (() => { const gs = doAno.flatMap(v => gastosDe(v.p)); return gs.length ? '<p class="sub">' + esc(t('gastos.ano', { ano: anoCal })) + ' <b class="total-ano">' + esc(somaMoedas(gs)) + '</b></p>' : ''; })();
     // calendário do ano
     $('vCalTitulo').textContent = t('viagens.calendario', { ano: anoCal });
     $('vAnos').innerHTML = ANOS.map(y => '<button type="button" data-ano-cal="' + y + '" aria-pressed="' + (y === anoCal) + '">' + y + '</button>').join('');
@@ -526,13 +559,28 @@
       '<div class="custo"><b' + (v.o.custo === 0 ? ' class="zero"' : '') + '>' + esc(nDias(v.o.custo)) + '</b><span class="sub">' + esc(t('deFerias')) + '</span></div></div>' +
       '<div class="sub">' + esc(v.o.tirar.length ? t('pedirFolga', { d: v.o.tirar.length > 6 ? fmt(v.o.tirar[0]) + ' … ' + fmt(v.o.tirar[v.o.tirar.length - 1]) + ' (' + v.o.tirar.length + ')' : v.o.tirar.map(fmt).join(', ') }) : t('semPedir')) + '</div>' +
       (v.p.cidade ? linksViagem(v.rotulo, v.o, v.p) : '<div class="acoes esq links">' + linkQualquerLugar(v.o) + '</div>') +
+      blocoGastos(v.p) +
       '<div class="acoes esq"><button type="button" class="leve" data-abrir="' + esc(v.p.trip_id) + '" data-abrir-ano="' + v.p.ano + '">' + esc(t('viagens.ver')) + '</button></div></article>';
     $('vLista').innerHTML = (futuras.length ? '<h3>' + esc(t('viagens.futuras')) + '</h3>' + futuras.map(v => cartao(v, vs.indexOf(v))).join('') : '') +
       (passadas.length ? '<details class="passadas"><summary>' + esc(t('viagens.passadas', { n: passadas.length })) + '</summary>' + passadas.map(v => cartao(v, vs.indexOf(v))).join('') + '</details>' : '');
   }
   $('vAnos').addEventListener('click', ev => { const b = ev.target.closest('[data-ano-cal]'); if (b) { anoCal = +b.dataset.anoCal; desenharViagens(); } });
   $('vCal').addEventListener('click', ev => { const d = ev.target.closest('[data-vi]'); if (d) { const c = $('v-' + d.dataset.vi); if (c) { if (c.closest('details')) c.closest('details').open = true; c.scrollIntoView({ behavior: 'smooth', block: 'center' }); } } });
+  $('vLista').addEventListener('submit', async ev => {
+    const f = ev.target.closest('[data-form-gasto]'); if (!f) return;
+    ev.preventDefault();
+    const [a, ...rest] = gastoAberto.split('|'), trip_id = rest.join('|'), valor = Math.round(+$('g-valor').value * 100) / 100;
+    if (!(valor >= 0) || $('g-valor').value === '') return msg('gMsg', t('err.valor'), 'erro');
+    const novo = { ano: +a, trip_id, tipo: $('g-tipo').value, status: $('g-status').value, valor, moeda: $('g-moeda').value, descricao: $('g-desc').value.trim() || null };
+    const { data, error } = await sb.from('gastos').insert(novo).select().single();
+    if (error) return msg('gMsg', t('err.salvarE', { e: error.message }), 'erro');
+    gastos.push(data); gastoAberto = null; desenharViagens();
+  });
   $('vLista').addEventListener('click', async ev => {
+    const ag = ev.target.closest('[data-abrir-gasto]'), fg = ev.target.closest('[data-fechar-gasto]'), dg = ev.target.closest('[data-del-gasto]');
+    if (ag) { gastoAberto = ag.dataset.abrirGasto; await desenharViagens(); const i = $('g-valor'); if (i) i.focus(); return; }
+    if (fg) { gastoAberto = null; return desenharViagens(); }
+    if (dg) { const id = dg.dataset.delGasto; gastos = gastos.filter(g => g.id !== id); desenharViagens(); const { error } = await sb.from('gastos').delete().eq('id', id); if (error) msg('appMsg', t('err.salvarE', { e: error.message }), 'erro'); return; }
     const b = ev.target.closest('[data-abrir]'); if (!b) return;
     const a = +b.dataset.abrirAno, id = b.dataset.abrir;
     if (a !== ano && ANOS.includes(a)) { ano = a; try { localStorage.setItem('tripsync:ano', ano); } catch (e) {} await carregarPlanos(); }
