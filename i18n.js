@@ -47,6 +47,7 @@
     'aba.viagens': 'Minhas viagens', 'viagens.proxima': 'Próxima viagem', 'viagens.agora': 'Viajando agora', 'viagens.emDias': 'em {n} dias', 'viagens.amanha': 'amanhã', 'viagens.nenhuma': 'Você ainda não marcou nenhuma viagem. Em Escapadas, toque em "Quero ir" ou crie a sua viagem.', 'viagens.resumo': '{n} viagens em {ano} · {d} dias de férias usados', 'viagens.calendario': 'Calendário {ano}', 'viagens.cidadeDef': 'Cidade a definir', 'viagens.futuras': 'Programadas', 'viagens.passadas': 'Já passaram ({n})', 'viagens.ver': 'Ver em Escapadas', 'legenda.viagem': 'Viagem', 'legenda.folga': 'Dia de férias', 'legenda.feriado': 'Feriado',
     'viagens.resumo1': '1 viagem em {ano} · {d} dias de férias usados',
     'gastos.titulo': 'Gastos', 'gastos.vazio': 'Nada anotado ainda.', 'gastos.add': '+ Adicionar gasto', 'gastos.tipo': 'O quê', 'gastos.status': 'Situação', 'gastos.valor': 'Valor', 'gastos.moeda': 'Moeda', 'gastos.desc': 'Detalhe (opcional)', 'gastos.desc.ph': 'Ex.: Ryanair ida e volta', 'gastos.salvar': 'Salvar gasto', 'gastos.ano': 'Gastos com viagens em {ano}:', 'err.valor': 'Coloque o valor.', 'tp.passagem': 'Passagem', 'tp.hotel': 'Hospedagem', 'tp.transporte': 'Transporte local', 'tp.comida': 'Comida', 'tp.passeio': 'Passeios', 'tp.outro': 'Outro', 'st.comprado': 'comprado', 'st.reservado': 'reservado', 'st.previsto': 'previsto',
+    escolherCidade: '+ Escolher cidade', outraCidade: 'Outra cidade (escrever)…',
   };
   D.en = {
     'app.sub': 'Holiday getaways, planned with your friends.',
@@ -93,6 +94,7 @@
     'aba.viagens': 'My trips', 'viagens.proxima': 'Next trip', 'viagens.agora': 'Travelling now', 'viagens.emDias': 'in {n} days', 'viagens.amanha': 'tomorrow', 'viagens.nenhuma': "You haven't planned any trips yet. In Getaways, tap \"I want to go\" or plan your own trip.", 'viagens.resumo': '{n} trips in {ano} · {d} vacation days used', 'viagens.calendario': 'Calendar {ano}', 'viagens.cidadeDef': 'City to be decided', 'viagens.futuras': 'Planned', 'viagens.passadas': 'Past trips ({n})', 'viagens.ver': 'See in Getaways', 'legenda.viagem': 'Trip', 'legenda.folga': 'Vacation day', 'legenda.feriado': 'Public holiday',
     'viagens.resumo1': '1 trip in {ano} · {d} vacation days used',
     'gastos.titulo': 'Spending', 'gastos.vazio': 'Nothing added yet.', 'gastos.add': '+ Add expense', 'gastos.tipo': 'What', 'gastos.status': 'Status', 'gastos.valor': 'Amount', 'gastos.moeda': 'Currency', 'gastos.desc': 'Details (optional)', 'gastos.desc.ph': 'E.g. Ryanair return', 'gastos.salvar': 'Save expense', 'gastos.ano': 'Trip spending in {ano}:', 'err.valor': 'Enter the amount.', 'tp.passagem': 'Flight / train', 'tp.hotel': 'Accommodation', 'tp.transporte': 'Local transport', 'tp.comida': 'Food', 'tp.passeio': 'Activities', 'tp.outro': 'Other', 'st.comprado': 'paid', 'st.reservado': 'booked', 'st.previsto': 'estimated',
+    escolherCidade: '+ Choose a city', outraCidade: 'Another city (type it)…',
   };
   D.fr = {
     'app.sub': 'Des escapades pendant les jours fériés, organisées avec vos amis.',
@@ -139,6 +141,7 @@
     'aba.viagens': 'Mes voyages', 'viagens.proxima': 'Prochain voyage', 'viagens.agora': 'En voyage', 'viagens.emDias': 'dans {n} jours', 'viagens.amanha': 'demain', 'viagens.nenhuma': "Vous n'avez encore aucun voyage. Dans Escapades, touchez « Je veux y aller » ou créez votre voyage.", 'viagens.resumo': '{n} voyages en {ano} · {d} jours de congé utilisés', 'viagens.calendario': 'Calendrier {ano}', 'viagens.cidadeDef': 'Ville à choisir', 'viagens.futuras': 'Prévus', 'viagens.passadas': 'Passés ({n})', 'viagens.ver': 'Voir dans Escapades', 'legenda.viagem': 'Voyage', 'legenda.folga': 'Jour de congé', 'legenda.feriado': 'Jour férié',
     'viagens.resumo1': '1 voyage en {ano} · {d} jours de congé utilisés',
     'gastos.titulo': 'Dépenses', 'gastos.vazio': 'Rien noté pour le moment.', 'gastos.add': '+ Ajouter une dépense', 'gastos.tipo': 'Quoi', 'gastos.status': 'Statut', 'gastos.valor': 'Montant', 'gastos.moeda': 'Devise', 'gastos.desc': 'Détail (facultatif)', 'gastos.desc.ph': 'Ex. : Ryanair aller-retour', 'gastos.salvar': 'Enregistrer', 'gastos.ano': 'Dépenses de voyage en {ano} :', 'err.valor': 'Indiquez le montant.', 'tp.passagem': 'Billet', 'tp.hotel': 'Hébergement', 'tp.transporte': 'Transport sur place', 'tp.comida': 'Repas', 'tp.passeio': 'Activités', 'tp.outro': 'Autre', 'st.comprado': 'payé', 'st.reservado': 'réservé', 'st.previsto': 'prévu',
+    escolherCidade: '+ Choisir une ville', outraCidade: 'Autre ville (écrire)…',
   };
   D.nl = {
     'app.sub': 'Uitstapjes op feestdagen, samen gepland met je vrienden.',
@@ -185,6 +188,7 @@
     'aba.viagens': 'Mijn reizen', 'viagens.proxima': 'Volgende reis', 'viagens.agora': 'Nu op reis', 'viagens.emDias': 'over {n} dagen', 'viagens.amanha': 'morgen', 'viagens.nenhuma': 'Je hebt nog geen reizen gepland. Tik bij Uitstapjes op "Ik wil gaan" of plan je eigen reis.', 'viagens.resumo': '{n} reizen in {ano} · {d} vakantiedagen gebruikt', 'viagens.calendario': 'Kalender {ano}', 'viagens.cidadeDef': 'Stad nog te kiezen', 'viagens.futuras': 'Gepland', 'viagens.passadas': 'Voorbij ({n})', 'viagens.ver': 'Bekijk bij Uitstapjes', 'legenda.viagem': 'Reis', 'legenda.folga': 'Vakantiedag', 'legenda.feriado': 'Feestdag',
     'viagens.resumo1': '1 reis in {ano} · {d} vakantiedagen gebruikt',
     'gastos.titulo': 'Uitgaven', 'gastos.vazio': 'Nog niets genoteerd.', 'gastos.add': '+ Uitgave toevoegen', 'gastos.tipo': 'Wat', 'gastos.status': 'Status', 'gastos.valor': 'Bedrag', 'gastos.moeda': 'Munt', 'gastos.desc': 'Detail (optioneel)', 'gastos.desc.ph': 'Bv. Ryanair heen en terug', 'gastos.salvar': 'Opslaan', 'gastos.ano': 'Reisuitgaven in {ano}:', 'err.valor': 'Vul het bedrag in.', 'tp.passagem': 'Ticket', 'tp.hotel': 'Verblijf', 'tp.transporte': 'Lokaal vervoer', 'tp.comida': 'Eten', 'tp.passeio': 'Uitstappen', 'tp.outro': 'Andere', 'st.comprado': 'betaald', 'st.reservado': 'geboekt', 'st.previsto': 'geschat',
+    escolherCidade: '+ Kies een stad', outraCidade: 'Andere stad (typen)…',
   };
   D.es = {
     'app.sub': 'Escapadas en los festivos, organizadas con tus amigos.',
@@ -231,6 +235,7 @@
     'aba.viagens': 'Mis viajes', 'viagens.proxima': 'Próximo viaje', 'viagens.agora': 'De viaje ahora', 'viagens.emDias': 'en {n} días', 'viagens.amanha': 'mañana', 'viagens.nenhuma': 'Todavía no tienes viajes. En Escapadas, toca "Quiero ir" o crea tu viaje.', 'viagens.resumo': '{n} viajes en {ano} · {d} días de vacaciones usados', 'viagens.calendario': 'Calendario {ano}', 'viagens.cidadeDef': 'Ciudad por decidir', 'viagens.futuras': 'Programados', 'viagens.passadas': 'Pasados ({n})', 'viagens.ver': 'Ver en Escapadas', 'legenda.viagem': 'Viaje', 'legenda.folga': 'Día de vacaciones', 'legenda.feriado': 'Festivo',
     'viagens.resumo1': '1 viaje en {ano} · {d} días de vacaciones usados',
     'gastos.titulo': 'Gastos', 'gastos.vazio': 'Nada anotado todavía.', 'gastos.add': '+ Añadir gasto', 'gastos.tipo': 'Qué', 'gastos.status': 'Estado', 'gastos.valor': 'Importe', 'gastos.moeda': 'Moneda', 'gastos.desc': 'Detalle (opcional)', 'gastos.desc.ph': 'Ej.: Ryanair ida y vuelta', 'gastos.salvar': 'Guardar gasto', 'gastos.ano': 'Gastos de viajes en {ano}:', 'err.valor': 'Pon el importe.', 'tp.passagem': 'Billete', 'tp.hotel': 'Alojamiento', 'tp.transporte': 'Transporte local', 'tp.comida': 'Comida', 'tp.passeio': 'Actividades', 'tp.outro': 'Otro', 'st.comprado': 'pagado', 'st.reservado': 'reservado', 'st.previsto': 'previsto',
+    escolherCidade: '+ Elegir ciudad', outraCidade: 'Otra ciudad (escribir)…',
   };
 
   const ok = l => D[l] ? l : null;

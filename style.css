@@ -156,3 +156,4 @@ select { font: inherit; color: var(--ink); background: var(--bg); border: 1px so
 .form-gasto label { font-size: 13px; font-weight: 600; color: var(--muted); }
 .total-ano { color: var(--ink); }
 .gastos > .leve { justify-self: start; }
+.sel-cidade { width: auto; max-width: 100%; padding: 4px 8px; font-size: 13px; }

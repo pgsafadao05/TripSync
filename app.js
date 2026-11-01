@@ -594,6 +594,7 @@
     const pv = paisesVisitados();
     $('nPaises').textContent = pv.size; $('nPct').textContent = Math.round(pv.size / 195 * 100) + '%';
     $('nCidades').textContent = visitados.filter(v => v.cidade).length;
+    if (!CIDS) carregarCidades();
     if (!mapaFeito) { desenharMapa($('mapa')); mapaFeito = true; }
     $('mapa').querySelectorAll('path.p').forEach(p => p.classList.toggle('foi', pv.has(p.dataset.a2)));
     $('tituloLista').textContent = pv.size ? t('seusPaises') : t('ondeFoi');
@@ -604,8 +605,29 @@
       return '<li class="lp' + (foi ? ' foi' : '') + '"><div class="lp-top"><span class="bandeira" aria-hidden="true">' + bandeira(a) + '</span><span class="nome">' + esc(n) + '</span>' +
         '<button type="button" class="marca" data-marca="' + a + '" aria-pressed="' + foi + '">' + esc(foi ? t('jaFuiOk') : t('jaFuiBtn')) + '</button></div>' +
         (foi ? '<div class="lp-cid">' + cs.map(v => '<button type="button" class="tag-x" data-remove="' + v.id + '" aria-label="' + esc(t('aria.remover', { c: v.cidade })) + '">' + esc(v.cidade) + ' ×</button>').join('') +
-          '<input type="text" data-add-cidade="' + a + '" placeholder="' + esc(t('addCidade')) + '" aria-label="' + esc(t('aria.addCidade', { p: n })) + '" autocomplete="off"></div>' : '') + '</li>';
+          campoCidade(a, n, cs) + '</div>' : '') + '</li>';
     }).join('') || '<li class="sub">' + esc(t('nenhumPais')) + '</li>';
+  }
+  // Lista das maiores cidades de cada país (cidades.json, carregada uma vez)
+  let CIDS = null, outraAberta = null;
+  async function carregarCidades() {
+    if (CIDS) return;
+    try { const r = await fetch('cidades.json'); CIDS = r.ok ? await r.json() : {}; } catch (e) { CIDS = {}; }
+    if (aba === 'jafui') desenharJaFui();
+  }
+  function campoCidade(a, n, cs) {
+    const texto = '<input type="text" data-add-cidade="' + a + '" placeholder="' + esc(t('addCidade')) + '" aria-label="' + esc(t('aria.addCidade', { p: n })) + '" autocomplete="off">';
+    const lista = ((CIDS || {})[a] || []).filter(c => !cs.some(v => norm(v.cidade) === norm(c)));
+    if (outraAberta === a || !lista.length) return texto;
+    return '<select class="sel-cidade" data-sel-cidade="' + a + '" aria-label="' + esc(t('aria.addCidade', { p: n })) + '"><option value="">' + esc(t('escolherCidade')) + '</option>' +
+      lista.map(c => '<option>' + esc(c) + '</option>').join('') + '<option value="__outra">' + esc(t('outraCidade')) + '</option></select>';
+  }
+  async function addCidade(a, cidade) {
+    cidade = cidade.trim(); if (!cidade) return;
+    if (visitados.some(v => v.a2 === a && norm(v.cidade) === norm(cidade))) return;
+    const { data, error } = await sb.from('visitados').insert({ cidade, pais: PAIS_PT[a] || a, a2: a }).select().single();
+    if (error) { msg('appMsg', t('err.cidade', { e: error.message }), 'erro'); return; }
+    visitados.push(data); desenhar();
   }
   async function marcarPais(a) {
     const pv = paisesVisitados();
@@ -626,12 +648,15 @@
   });
   $('listaPaises').addEventListener('keydown', async ev => {
     const inp = ev.target.closest('[data-add-cidade]'); if (!inp || ev.key !== 'Enter') return;
-    const cidade = inp.value.trim(), a = inp.dataset.addCidade; if (!cidade) return;
-    if (visitados.some(v => v.a2 === a && norm(v.cidade) === norm(cidade))) { inp.value = ''; return; }
-    const { data, error } = await sb.from('visitados').insert({ cidade, pais: PAIS_PT[a] || a, a2: a }).select().single();
-    if (error) { msg('appMsg', t('err.cidade', { e: error.message }), 'erro'); return; }
-    visitados.push(data); desenhar();
+    const a = inp.dataset.addCidade; outraAberta = null; await addCidade(a, inp.value); inp.value = '';
     const novo = document.querySelector('[data-add-cidade="' + a + '"]'); if (novo) novo.focus();
+  });
+
+  $('listaPaises').addEventListener('change', async ev => {
+    const sel = ev.target.closest('[data-sel-cidade]'); if (!sel || !sel.value) return;
+    const a = sel.dataset.selCidade;
+    if (sel.value === '__outra') { outraAberta = a; desenharJaFui(); const i = document.querySelector('[data-add-cidade="' + a + '"]'); if (i) i.focus(); return; }
+    await addCidade(a, sel.value);
   });
 
   // ---------- Amigos (grupos) ----------
