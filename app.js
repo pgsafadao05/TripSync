@@ -349,6 +349,8 @@
     return '<div class="preco" data-preco data-org="' + esc(AVIA[org] || org) + '" data-dst="' + esc(dst ? (AVIA[dst] || dst) : '') + '" data-p-ida="' + o.inicio + '" data-p-volta="' + o.fim +
       '" data-k="' + esc(p.ano + '|' + p.trip_id) + '" data-c="' + esc(p.cidade || '') + '"></div>';
   }
+  // Botão "Ver preço real agora" (Duffel): desligado até o Pedro ativar o modo live na Duffel
+  const PRECO_REAL = false;
   const precoCache = new Map();
   function buscarPrecos(q) {
     const k = [q.origem, q.destino, q.ida, q.volta, q.moeda].join('|');
@@ -380,7 +382,7 @@
         el.innerHTML = '<a class="preco-voo" href="' + esc(href || '#') + '" target="_blank" rel="noopener" data-compra="passagem" data-compra-k="' + esc(d.k) + '" data-compra-c="' + esc(d.c) + '">' +
           '<b>' + esc(titulo) + ' ↗</b><span class="sub">' + esc(detalhe) + '</span></a>' +
           '<span class="sub">' + esc(t(exato ? 'preco.nota.exato' : 'preco.nota.outra')) + '</span>' +
-          '<div class="preco-real" data-busca="' + esc(href || '') + '"><button type="button" class="leve" data-real>' + esc(t('real.botao')) + '</button></div>';
+          (!PRECO_REAL ? '' : '<div class="preco-real" data-busca="' + esc(href || '') + '"><button type="button" class="leve" data-real>' + esc(t('real.botao')) + '</button></div>');
       } else {
         el.innerHTML = '<div class="sub">' + esc(t(tipo === 'ida' ? 'preco.destinosIda' : 'preco.destinos')) + '</div><div class="chips">' + res.slice(0, 8).map(x =>
           '<button type="button" class="chip" data-destino="' + esc(x.destino) + '" data-destino-nome="' + esc(x.nome) + '" data-destino-k="' + esc(d.k) + '">' + bandeira(x.pais) + ' ' + esc(x.nome) +
