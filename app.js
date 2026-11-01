@@ -374,7 +374,7 @@
         const v = dinheiro(x.preco, r.moeda), exato = tipo === 'exato';
         const base = exato ? x.link : (r.busca || x.link), href = base ? base + (base.includes('?') ? '&' : '?') + 'currency=' + String(r.moeda).toLowerCase() : null;
         const titulo = exato ? t('preco.aPartir', { v }) : t('preco.verDatas');
-        const detalhe = exato ? (x.cia ? x.cia + ' · ' : '') + escalasTxt(x.escalas) : t('preco.pista.' + tipo, { v, d: datas.replace(/ · $/, '') });
+        const detalhe = exato ? (x.cia ? x.cia + ' · ' : '') + escalasTxt(Math.max(x.escalas || 0, x.escalasVolta || 0)) : t('preco.pista.' + tipo, { v, d: datas.replace(/ · $/, '') });
         el.innerHTML = '<a class="preco-voo" href="' + esc(href || '#') + '" target="_blank" rel="noopener" data-compra="passagem" data-compra-k="' + esc(d.k) + '" data-compra-c="' + esc(d.c) + '">' +
           '<b>' + esc(titulo) + ' ↗</b><span class="sub">' + esc(detalhe) + '</span></a>' +
           '<span class="sub">' + esc(t(exato ? 'preco.nota.exato' : 'preco.nota.outra')) + '</span>' +
@@ -403,7 +403,8 @@
     if (!caixa.isConnected) return;
     if (!r || r.erro) { caixa.innerHTML = '<span class="sub">' + esc(t('real.erro')) + '</span>'; return; }
     if (!r.ofertas.length) { caixa.innerHTML = '<span class="sub">' + esc(t('real.nada')) + '</span>'; return; }
-    const trecho = s => s ? s.de + '→' + s.para + ' ' + horaCurta(s.sai) + ' · ' + escalasTxt(s.escalas) : '';
+    const durTxt = m => m ? Math.floor(m / 60) + 'h' + String(m % 60).padStart(2, '0') : '';
+    const trecho = s => s ? s.de + '→' + s.para + ' ' + horaCurta(s.sai) + ' · ' + escalasTxt(s.escalas) + (s.min ? ' · ' + durTxt(s.min) : '') : '';
     caixa.innerHTML = '<div class="rotulo">' + esc(t('real.titulo')) + (r.teste ? ' · ' + esc(t('real.teste')) : '') + '</div>' + r.ofertas.map((o, i) =>
       '<a class="preco-voo' + (i ? ' secundario' : '') + '" href="' + esc(caixa.dataset.busca || '#') + '" target="_blank" rel="noopener" data-compra="passagem" data-compra-k="' + esc(d.k) + '" data-compra-c="' + esc(d.c) + '">' +
       '<b>' + esc(dinheiro(o.preco, o.moeda)) + (o.cia ? ' · ' + esc(o.cia) : '') + '</b><span class="sub">' + esc(trecho(o.ida)) + '<br>' + esc(trecho(o.volta)) + '</span></a>').join('') +
