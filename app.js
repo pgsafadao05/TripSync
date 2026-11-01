@@ -514,7 +514,7 @@
     if (file.size > 5 * 1024 * 1024) return msg('pMsg', t('err.foto5'), 'erro');
     msg('pMsg', t('enviandoFoto'));
     const ext = (file.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg'), caminho = user.id + '/avatar-' + Date.now() + '.' + ext;
-    const { error } = await sb.storage.from('avatars').upload(caminho, file, { upsert: true, contentType: file.type });
+    const { error } = await sb.storage.from('avatars').upload(caminho, file, { contentType: file.type });
     if (error) return msg('pMsg', t('err.foto', { e: error.message }), 'erro');
     const url = sb.storage.from('avatars').getPublicUrl(caminho).data.publicUrl;
     const ok = await salvarPerfil({ foto_url: url });
