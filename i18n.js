@@ -49,6 +49,7 @@
     'gastos.titulo': 'Gastos', 'gastos.vazio': 'Nada anotado ainda.', 'gastos.add': '+ Adicionar gasto', 'gastos.tipo': 'O quê', 'gastos.status': 'Situação', 'gastos.valor': 'Valor', 'gastos.moeda': 'Moeda', 'gastos.desc': 'Detalhe (opcional)', 'gastos.desc.ph': 'Ex.: Ryanair ida e volta', 'gastos.salvar': 'Salvar gasto', 'gastos.ano': 'Gastos com viagens em {ano}:', 'err.valor': 'Coloque o valor.', 'tp.passagem': 'Passagem', 'tp.hotel': 'Hospedagem', 'tp.transporte': 'Transporte local', 'tp.comida': 'Comida', 'tp.passeio': 'Passeios', 'tp.outro': 'Outro', 'st.comprado': 'comprado', 'st.reservado': 'reservado', 'st.previsto': 'previsto',
     escolherCidade: '+ Escolher cidade', outraCidade: 'Outra cidade (escrever)…',
     'compra.passagem': 'Comprou a passagem para {c}?', 'compra.hotel': 'Reservou o hotel em {c}?', 'compra.quanto': 'Quanto pagou?', 'compra.salvar': 'Salvar', 'compra.nao': 'Ainda não comprei', 'compra.ok': 'Anotado nos gastos da viagem.',
+    'preco.buscando': 'Procurando preços de voo…', 'preco.sem': 'Sem preço de voo guardado para essas datas. Use o link abaixo.', 'preco.aPartir': 'Voo ida e volta a partir de {v}', 'preco.aprox': 'Não achei preço pro dia exato; este é o mais barato no mesmo mês. O preço final aparece no site.', 'preco.destinos': 'Mais baratos para voar nessas datas (toque para escolher):', 'preco.direto': 'direto', 'preco.escala1': '1 escala', 'preco.escalasN': '{n} escalas',
   };
   D.en = {
     'app.sub': 'Holiday getaways, planned with your friends.',
@@ -97,6 +98,7 @@
     'gastos.titulo': 'Spending', 'gastos.vazio': 'Nothing added yet.', 'gastos.add': '+ Add expense', 'gastos.tipo': 'What', 'gastos.status': 'Status', 'gastos.valor': 'Amount', 'gastos.moeda': 'Currency', 'gastos.desc': 'Details (optional)', 'gastos.desc.ph': 'E.g. Ryanair return', 'gastos.salvar': 'Save expense', 'gastos.ano': 'Trip spending in {ano}:', 'err.valor': 'Enter the amount.', 'tp.passagem': 'Flight / train', 'tp.hotel': 'Accommodation', 'tp.transporte': 'Local transport', 'tp.comida': 'Food', 'tp.passeio': 'Activities', 'tp.outro': 'Other', 'st.comprado': 'paid', 'st.reservado': 'booked', 'st.previsto': 'estimated',
     escolherCidade: '+ Choose a city', outraCidade: 'Another city (type it)…',
     'compra.passagem': 'Did you buy the ticket to {c}?', 'compra.hotel': 'Did you book the hotel in {c}?', 'compra.quanto': 'How much did you pay?', 'compra.salvar': 'Save', 'compra.nao': 'Not yet', 'compra.ok': 'Added to the trip spending.',
+    'preco.buscando': 'Looking up flight prices…', 'preco.sem': 'No saved flight price for these dates. Use the link below.', 'preco.aPartir': 'Return flight from {v}', 'preco.aprox': 'No price for the exact day; this is the cheapest in the same month. The final price shows on the site.', 'preco.destinos': 'Cheapest places to fly on these dates (tap to pick):', 'preco.direto': 'direct', 'preco.escala1': '1 stop', 'preco.escalasN': '{n} stops',
   };
   D.fr = {
     'app.sub': 'Des escapades pendant les jours fériés, organisées avec vos amis.',
@@ -145,6 +147,7 @@
     'gastos.titulo': 'Dépenses', 'gastos.vazio': 'Rien noté pour le moment.', 'gastos.add': '+ Ajouter une dépense', 'gastos.tipo': 'Quoi', 'gastos.status': 'Statut', 'gastos.valor': 'Montant', 'gastos.moeda': 'Devise', 'gastos.desc': 'Détail (facultatif)', 'gastos.desc.ph': 'Ex. : Ryanair aller-retour', 'gastos.salvar': 'Enregistrer', 'gastos.ano': 'Dépenses de voyage en {ano} :', 'err.valor': 'Indiquez le montant.', 'tp.passagem': 'Billet', 'tp.hotel': 'Hébergement', 'tp.transporte': 'Transport sur place', 'tp.comida': 'Repas', 'tp.passeio': 'Activités', 'tp.outro': 'Autre', 'st.comprado': 'payé', 'st.reservado': 'réservé', 'st.previsto': 'prévu',
     escolherCidade: '+ Choisir une ville', outraCidade: 'Autre ville (écrire)…',
     'compra.passagem': 'Vous avez acheté le billet pour {c} ?', 'compra.hotel': "Vous avez réservé l'hôtel à {c} ?", 'compra.quanto': 'Combien avez-vous payé ?', 'compra.salvar': 'Enregistrer', 'compra.nao': 'Pas encore', 'compra.ok': 'Ajouté aux dépenses du voyage.',
+    'preco.buscando': 'Recherche des prix des vols…', 'preco.sem': 'Aucun prix de vol enregistré pour ces dates. Utilisez le lien ci-dessous.', 'preco.aPartir': 'Vol aller-retour dès {v}', 'preco.aprox': 'Pas de prix pour le jour exact ; voici le moins cher du même mois. Le prix final s’affiche sur le site.', 'preco.destinos': 'Destinations les moins chères à ces dates (touchez pour choisir) :', 'preco.direto': 'direct', 'preco.escala1': '1 escale', 'preco.escalasN': '{n} escales',
   };
   D.nl = {
     'app.sub': 'Uitstapjes op feestdagen, samen gepland met je vrienden.',
@@ -193,6 +196,7 @@
     'gastos.titulo': 'Uitgaven', 'gastos.vazio': 'Nog niets genoteerd.', 'gastos.add': '+ Uitgave toevoegen', 'gastos.tipo': 'Wat', 'gastos.status': 'Status', 'gastos.valor': 'Bedrag', 'gastos.moeda': 'Munt', 'gastos.desc': 'Detail (optioneel)', 'gastos.desc.ph': 'Bv. Ryanair heen en terug', 'gastos.salvar': 'Opslaan', 'gastos.ano': 'Reisuitgaven in {ano}:', 'err.valor': 'Vul het bedrag in.', 'tp.passagem': 'Ticket', 'tp.hotel': 'Verblijf', 'tp.transporte': 'Lokaal vervoer', 'tp.comida': 'Eten', 'tp.passeio': 'Uitstappen', 'tp.outro': 'Andere', 'st.comprado': 'betaald', 'st.reservado': 'geboekt', 'st.previsto': 'geschat',
     escolherCidade: '+ Kies een stad', outraCidade: 'Andere stad (typen)…',
     'compra.passagem': 'Heb je het ticket naar {c} gekocht?', 'compra.hotel': 'Heb je het hotel in {c} geboekt?', 'compra.quanto': 'Hoeveel heb je betaald?', 'compra.salvar': 'Opslaan', 'compra.nao': 'Nog niet', 'compra.ok': 'Toegevoegd aan de reisuitgaven.',
+    'preco.buscando': 'Vluchtprijzen zoeken…', 'preco.sem': 'Geen bewaarde vluchtprijs voor deze data. Gebruik de link hieronder.', 'preco.aPartir': 'Retourvlucht vanaf {v}', 'preco.aprox': 'Geen prijs voor de exacte dag; dit is de goedkoopste in dezelfde maand. De eindprijs zie je op de site.', 'preco.destinos': 'Goedkoopste bestemmingen op deze data (tik om te kiezen):', 'preco.direto': 'direct', 'preco.escala1': '1 overstap', 'preco.escalasN': '{n} overstappen',
   };
   D.es = {
     'app.sub': 'Escapadas en los festivos, organizadas con tus amigos.',
@@ -241,6 +245,7 @@
     'gastos.titulo': 'Gastos', 'gastos.vazio': 'Nada anotado todavía.', 'gastos.add': '+ Añadir gasto', 'gastos.tipo': 'Qué', 'gastos.status': 'Estado', 'gastos.valor': 'Importe', 'gastos.moeda': 'Moneda', 'gastos.desc': 'Detalle (opcional)', 'gastos.desc.ph': 'Ej.: Ryanair ida y vuelta', 'gastos.salvar': 'Guardar gasto', 'gastos.ano': 'Gastos de viajes en {ano}:', 'err.valor': 'Pon el importe.', 'tp.passagem': 'Billete', 'tp.hotel': 'Alojamiento', 'tp.transporte': 'Transporte local', 'tp.comida': 'Comida', 'tp.passeio': 'Actividades', 'tp.outro': 'Otro', 'st.comprado': 'pagado', 'st.reservado': 'reservado', 'st.previsto': 'previsto',
     escolherCidade: '+ Elegir ciudad', outraCidade: 'Otra ciudad (escribir)…',
     'compra.passagem': '¿Compraste el billete a {c}?', 'compra.hotel': '¿Reservaste el hotel en {c}?', 'compra.quanto': '¿Cuánto pagaste?', 'compra.salvar': 'Guardar', 'compra.nao': 'Todavía no', 'compra.ok': 'Anotado en los gastos del viaje.',
+    'preco.buscando': 'Buscando precios de vuelos…', 'preco.sem': 'No hay precio de vuelo guardado para estas fechas. Usa el enlace de abajo.', 'preco.aPartir': 'Vuelo de ida y vuelta desde {v}', 'preco.aprox': 'No hay precio para el día exacto; este es el más barato del mismo mes. El precio final aparece en la web.', 'preco.destinos': 'Destinos más baratos en estas fechas (toca para elegir):', 'preco.direto': 'directo', 'preco.escala1': '1 escala', 'preco.escalasN': '{n} escalas',
   };
 
   const ok = l => D[l] ? l : null;

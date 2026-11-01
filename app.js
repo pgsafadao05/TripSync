@@ -341,6 +341,48 @@
     colonia: 'CGN', koln: 'CGN', dusseldorf: 'DUS', frankfurt: 'FRA', munique: 'MUC', munich: 'MUC', lyon: 'LYS', marselha: 'MRS', marseille: 'MRS', nice: 'NCE', faro: 'FAO' };
   const codigoOrigem = () => { const c = (perfil.cidade_base || '').trim(); return /^[A-Za-z]{3,4}$/.test(c) ? c.toUpperCase() : (AEROPORTOS[norm(c)] || (deBruxelas() ? 'BRU' : '')); };
   const yymmdd = d => d.slice(2).replace(/-/g, '');
+  // Preços de voo (Aviasales via função "precos" no Supabase; o token fica no servidor)
+  const AVIA = { PARI: 'PAR', LOND: 'LON', ROME: 'ROM', MILA: 'MIL', RIOA: 'RIO' };
+  const paraSky = c => ({ PAR: 'PARI', LON: 'LOND', ROM: 'ROME', MIL: 'MILA', RIO: 'RIOA' })[c] || c;
+  function caixaPreco(o, p, dst) {
+    const org = codigoOrigem(); if (!org || o.fim < hojeISO || o.inicio < hojeISO) return '';
+    return '<div class="preco" data-preco data-org="' + esc(AVIA[org] || org) + '" data-dst="' + esc(dst ? (AVIA[dst] || dst) : '') + '" data-ida="' + o.inicio + '" data-volta="' + o.fim +
+      '" data-k="' + esc(p.ano + '|' + p.trip_id) + '" data-c="' + esc(p.cidade || '') + '"></div>';
+  }
+  const precoCache = new Map();
+  function buscarPrecos(q) {
+    const k = [q.origem, q.destino, q.ida, q.volta, q.moeda].join('|');
+    if (!precoCache.has(k)) precoCache.set(k, sb.functions.invoke('precos', { body: q }).then(r => (r.error ? null : r.data)).catch(() => null));
+    return precoCache.get(k);
+  }
+  const escalasTxt = n => (n ? t(n > 1 ? 'preco.escalasN' : 'preco.escala1', { n }) : t('preco.direto'));
+  const diaCurto = iso => fmt(String(iso).slice(0, 10));
+  function preencherPrecos() {
+    document.querySelectorAll('[data-preco]:not([data-ok])').forEach(async el => {
+      el.dataset.ok = '1'; el.innerHTML = '<span class="sub">' + esc(t('preco.buscando')) + '</span>';
+      const d = el.dataset, moeda = moedaPadrao();
+      const r = await buscarPrecos({ origem: d.org, destino: d.dst || null, ida: d.ida, volta: d.volta, moeda });
+      if (!el.isConnected) return;
+      const res = (r && r.resultados) || [];
+      if (!res.length) { el.innerHTML = r ? '<span class="sub">' + esc(t('preco.sem')) + '</span>' : ''; return; }
+      const aprox = r.aproximado ? '<span class="sub">' + esc(t('preco.aprox')) + '</span>' : '';
+      if (d.dst) {
+        const x = res[0], datas = r.aproximado ? diaCurto(x.ida) + ' → ' + diaCurto(x.volta) + ' · ' : '';
+        el.innerHTML = '<a class="preco-voo" href="' + esc(x.link || '#') + '" target="_blank" rel="noopener" data-compra="passagem" data-compra-k="' + esc(d.k) + '" data-compra-c="' + esc(d.c) + '">' +
+          '<b>' + esc(t('preco.aPartir', { v: dinheiro(x.preco, r.moeda) })) + '</b><span class="sub">' + esc(datas + (x.cia ? x.cia + ' · ' : '') + escalasTxt(x.escalas)) + ' ↗</span></a>' + aprox;
+      } else {
+        el.innerHTML = '<div class="sub">' + esc(t('preco.destinos')) + '</div><div class="chips">' + res.slice(0, 8).map(x =>
+          '<button type="button" class="chip" data-destino="' + esc(x.destino) + '" data-destino-nome="' + esc(x.nome) + '" data-destino-k="' + esc(d.k) + '">' + bandeira(x.pais) + ' ' + esc(x.nome) +
+          ' <b>' + esc(dinheiro(x.preco, r.moeda)) + '</b></button>').join('') + '</div>' + aprox;
+      }
+    });
+  }
+  new MutationObserver(() => { if (document.querySelector('[data-preco]:not([data-ok])')) preencherPrecos(); }).observe(document.body, { childList: true, subtree: true });
+  document.addEventListener('click', ev => {
+    const b = ev.target.closest('[data-destino]'); if (!b) return;
+    const id = b.dataset.destinoK.split('|').slice(1).join('|');
+    salvarPlano(id, { cidade: b.dataset.destinoNome, iata: b.dataset.destino });
+  });
   // Sem cidade: onde está mais barato voar nessas datas
   function linkQualquerLugar(o) {
     const org = codigoOrigem(); if (!org) return '';
@@ -349,7 +391,7 @@
   function linksViagem(rotulo, o, p) {
     const cid = achaCidade(p.cidade);
     const iata = (p.iata || (cid && cid.iata) || '').toUpperCase(), de = perfil.cidade_base || 'Brussels', org = codigoOrigem();
-    const voos = org && iata ? 'https://www.skyscanner.net/transport/flights/' + org.toLowerCase() + '/' + iata.toLowerCase() + '/' + yymmdd(o.inicio) + '/' + yymmdd(o.fim) + '/?rtn=1&sortby=price'
+    const voos = org && iata ? 'https://www.skyscanner.net/transport/flights/' + org.toLowerCase() + '/' + paraSky(iata).toLowerCase() + '/' + yymmdd(o.inicio) + '/' + yymmdd(o.fim) + '/?rtn=1&sortby=price'
       : 'https://www.google.com/travel/flights?hl=' + loc() + '&q=' + encodeURIComponent('cheapest flights from ' + de + ' to ' + (iata || p.cidade) + ' ' + o.inicio + ' to ' + o.fim);
     const hotel = 'https://www.booking.com/searchresults.html?ss=' + encodeURIComponent(p.cidade) + '&checkin=' + o.inicio + '&checkout=' + o.fim + '&group_adults=1&no_rooms=1&nflt=ht_id%3D204&order=price';
     const agenda = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(t('agenda.titulo', { c: p.cidade })) +
@@ -357,7 +399,7 @@
       '&details=' + encodeURIComponent(t('agenda.det', { n: o.total, f: rotulo, d: o.tirar.map(fmt).join(', ') || t('nenhumDia') }));
     const trem = cid && cid.modo === 'trem' && deBruxelas();
     const marca = tipo => ' data-compra="' + tipo + '" data-compra-k="' + esc(p.ano + '|' + p.trip_id) + '" data-compra-c="' + esc(p.cidade) + '"';
-    return '<div class="acoes esq links">' + (trem ? '<a href="https://www.eurostar.com" target="_blank" rel="noopener"' + marca('passagem') + '>' + t('link.trens') + '</a>' : '<a href="' + voos + '" target="_blank" rel="noopener"' + marca('passagem') + '>' + t('link.baratos') + '</a>') +
+    return (org && iata && !trem ? caixaPreco(o, p, iata) : '') + '<div class="acoes esq links">' + (trem ? '<a href="https://www.eurostar.com" target="_blank" rel="noopener"' + marca('passagem') + '>' + t('link.trens') + '</a>' : '<a href="' + voos + '" target="_blank" rel="noopener"' + marca('passagem') + '>' + t('link.baratos') + '</a>') +
       '<a href="' + hotel + '" target="_blank" rel="noopener"' + marca('hotel') + '>' + t('link.hoteisBaratos') + '</a><a href="' + agenda + '" target="_blank" rel="noopener">' + t('link.agenda') + '</a></div>';
   }
   function amigosNaTrip(tripId) {
@@ -396,7 +438,7 @@
               (deBruxelas() ? ' <span class="sub">' + esc(t(c.modo, { t: c.tempo })) + '</span>' : '') + '</button>').join('') + '</div>' : '') + '</div>' +
           '<div class="acoes esq"><button type="button" class="ir" data-acao="vou">' + esc(vou ? t('vouViajar') : t('querIr')) + '</button>' +
             (vou ? '' : '<button type="button" class="leve" data-acao="agora-nao">' + esc(t('agoraNao')) + '</button><button type="button" class="leve" data-acao="ocultar">' + esc(t('naoInteressa')) + '</button>') + '</div>' +
-          (vou && p.cidade ? linksViagem(x.feriado, o, p) : vou ? '<div class="sub">' + esc(t('precisaCidade')) + '</div><div class="acoes esq links">' + linkQualquerLugar(o) + '</div>' : '') +
+          (vou && p.cidade ? linksViagem(x.feriado, o, p) : vou ? '<div class="sub">' + esc(t('precisaCidade')) + '</div>' + caixaPreco(o, { ano, trip_id: x.id }) + '<div class="acoes esq links">' + linkQualquerLugar(o) + '</div>' : '') +
           '</article>';
       });
       doMes.filter(escondida).forEach(x => {
@@ -418,7 +460,7 @@
       '<div class="custo"><b' + (o.custo === 0 ? ' class="zero"' : '') + '>' + esc(nDias(o.custo)) + '</b><span class="sub">' + esc(t('deFerias')) + '</span></div></div>' +
       '<div class="sub">' + esc(o.tirar.length ? t('pedirFolga', { d: o.tirar.length > 6 ? fmt(o.tirar[0]) + ' … ' + fmt(o.tirar[o.tirar.length - 1]) + ' (' + o.tirar.length + ')' : o.tirar.map(fmt).join(', ') }) : t('semPedir')) + '</div>' +
       '<div class="form"><label for="c-' + esc(p.trip_id) + '">' + esc(t('cidadeQuero')) + '</label><input type="text" id="c-' + esc(p.trip_id) + '" data-cidade-livre value="' + esc(p.cidade || '') + '" placeholder="' + esc(t('escrevaCidade')) + '" autocomplete="off"></div>' +
-      (p.cidade ? linksViagem(t('livre.rotulo'), o, p) : '<div class="acoes esq links">' + linkQualquerLugar(o) + '</div>') +
+      (p.cidade ? linksViagem(t('livre.rotulo'), o, p) : caixaPreco(o, p) + '<div class="acoes esq links">' + linkQualquerLugar(o) + '</div>') +
       '<div class="acoes esq"><button type="button" class="leve" data-editar-livre>' + esc(t('editar')) + '</button><button type="button" class="leve" data-apagar-livre>' + esc(t('apagar')) + '</button></div></article>';
   }
   function formLivre(m) {
@@ -559,7 +601,7 @@
       '<div class="sub">' + esc(fmt(v.o.inicio)) + ' → ' + esc(fmt(v.o.fim)) + ' · ' + esc(t('trip.dias', { n: v.o.total })) + '</div></div>' +
       '<div class="custo"><b' + (v.o.custo === 0 ? ' class="zero"' : '') + '>' + esc(nDias(v.o.custo)) + '</b><span class="sub">' + esc(t('deFerias')) + '</span></div></div>' +
       '<div class="sub">' + esc(v.o.tirar.length ? t('pedirFolga', { d: v.o.tirar.length > 6 ? fmt(v.o.tirar[0]) + ' … ' + fmt(v.o.tirar[v.o.tirar.length - 1]) + ' (' + v.o.tirar.length + ')' : v.o.tirar.map(fmt).join(', ') }) : t('semPedir')) + '</div>' +
-      (v.p.cidade ? linksViagem(v.rotulo, v.o, v.p) : '<div class="acoes esq links">' + linkQualquerLugar(v.o) + '</div>') +
+      (v.p.cidade ? linksViagem(v.rotulo, v.o, v.p) : caixaPreco(v.o, v.p) + '<div class="acoes esq links">' + linkQualquerLugar(v.o) + '</div>') +
       blocoGastos(v.p) +
       '<div class="acoes esq"><button type="button" class="leve" data-abrir="' + esc(v.p.trip_id) + '" data-abrir-ano="' + v.p.ano + '">' + esc(t('viagens.ver')) + '</button></div></article>';
     $('vLista').innerHTML = (futuras.length ? '<h3>' + esc(t('viagens.futuras')) + '</h3>' + futuras.map(v => cartao(v, vs.indexOf(v))).join('') : '') +
