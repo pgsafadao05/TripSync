@@ -114,3 +114,7 @@ select { font: inherit; color: var(--ink); background: var(--bg); border: 1px so
 .aviso { font-size: 14px; border: 1px solid var(--sol); background: var(--sol-bg); border-radius: 12px; padding: 10px 14px; }
 .topo-dir { display: flex; align-items: center; gap: 10px; }
 .idioma { width: auto; padding: 6px 8px; font-size: 13px; background: transparent; border-color: var(--line); color: var(--muted); }
+.criar { border: 1px dashed var(--line); background: transparent; border-radius: 12px; padding: 12px 16px; text-align: left; color: var(--ink); font-weight: 600; font-size: 14px; }
+.criar:hover { border-color: var(--sol); }
+.form-livre { border-style: dashed; border-color: var(--sol); }
+.trip.livre .rotulo { margin-bottom: 2px; }

@@ -247,10 +247,15 @@
     const atual = planos[tripId] || { user_id: user.id, ano, trip_id: tripId };
     const novo = Object.assign({}, atual, patch);
     planos[tripId] = novo; desenhar();
-    const { user_id, ano: a, trip_id, status, duracao, cidade, iata } = novo;
-    const { error } = await sb.from('planos').upsert({ user_id, ano: a, trip_id, status: status || null, duracao: duracao || null, cidade: cidade || null, iata: iata || null });
+    const { user_id, ano: a, trip_id, status, duracao, cidade, iata, inicio, fim } = novo;
+    const { error } = await sb.from('planos').upsert({ user_id, ano: a, trip_id, status: status || null, duracao: duracao || null, cidade: cidade || null, iata: iata || null, inicio: inicio || null, fim: fim || null });
     if (error) msg('appMsg', t('err.salvarE', { e: error.message }), 'erro');
     else { const i = planosGrupo.findIndex(r => r.user_id === user.id && r.trip_id === tripId); if (i >= 0) planosGrupo[i] = novo; else planosGrupo.push(novo); }
+  }
+  async function apagarPlano(tripId) {
+    delete planos[tripId]; planosGrupo = planosGrupo.filter(r => !(r.user_id === user.id && r.trip_id === tripId)); desenhar();
+    const { error } = await sb.from('planos').delete().eq('user_id', user.id).eq('trip_id', tripId);
+    if (error) msg('appMsg', t('err.salvarE', { e: error.message }), 'erro');
   }
   async function salvarPerfil(patch) {
     Object.assign(perfil, patch);
@@ -290,20 +295,64 @@
     for (let k = 0; k < Math.min(4, n); k++) out.push(base[(semente * 3 + k * Math.max(1, Math.floor(n / 4))) % n]);
     return [...new Set(out)];
   }
-  function gasto() {
-    return F.cityTrips(ano).reduce((s, x) => { const p = planos[x.id]; return s + (p && p.status === 'vou' ? x.opcoes[p.duracao || x.padrao].custo : 0); }, 0);
+  // ---------- Viagens livres (a pessoa escolhe a data e quantos dias) ----------
+  const ehLivre = id => String(id).startsWith('livre-');
+  const somaDias = (d, n) => { const x = utcDate(d); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
+  function janelaLivre(inicio, n) {
+    const y = +inicio.slice(0, 4), fer = new Set([...F.feriados(y - 1), ...F.feriados(y), ...F.feriados(y + 1)].map(h => h.data));
+    const tirar = []; let feriados = 0;
+    for (let i = 0; i < n; i++) {
+      const d = somaDias(inicio, i), w = utcDate(d).getUTCDay();
+      if (w === 0 || w === 6) continue;
+      if (fer.has(d)) feriados++; else tirar.push(d);
+    }
+    return { inicio, fim: somaDias(inicio, n - 1), total: n, custo: tirar.length, tirar, feriados };
   }
-  function linksViagem(x, o, p) {
+  // Dentro do mês, a data de início que gasta menos dias de férias para n dias de viagem
+  function melhorInicio(y, m, n) {
+    let best = null;
+    for (let d = 1; d <= new Date(Date.UTC(y, m + 1, 0)).getUTCDate(); d++) {
+      const ini = new Date(Date.UTC(y, m, d)).toISOString().slice(0, 10);
+      if (ini < hojeISO) continue;
+      const j = janelaLivre(ini, n);
+      // empate: prefere começar sexta ou sábado (fim de semana inteiro no começo)
+      const bom = [5, 6].includes(utcDate(ini).getUTCDay());
+      if (!best || j.custo < best.custo || (j.custo === best.custo && bom && !best.bom)) best = Object.assign(j, { bom });
+    }
+    return best;
+  }
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const livresMinhas = () => Object.values(planos).filter(p => ehLivre(p.trip_id) && p.inicio);
+  let editando = null; // { id, mes, inicio, dias }
+  function gasto() {
+    const fer = F.cityTrips(ano).reduce((s, x) => { const p = planos[x.id]; return s + (p && p.status === 'vou' ? x.opcoes[p.duracao || x.padrao].custo : 0); }, 0);
+    return fer + livresMinhas().reduce((s, p) => s + janelaLivre(p.inicio, p.duracao).custo, 0);
+  }
+  // Código de aeroporto/cidade para os buscadores (Skyscanner aceita códigos de cidade)
+  const AEROPORTOS = { bruxelas: 'BRU', brussels: 'BRU', bruxelles: 'BRU', brussel: 'BRU', bruselas: 'BRU', antuerpia: 'BRU', antwerpen: 'BRU', anvers: 'BRU', gent: 'BRU', gante: 'BRU',
+    charleroi: 'CRL', liege: 'LGG', luik: 'LGG', lisboa: 'LIS', lisbon: 'LIS', porto: 'OPO', paris: 'PARI', londres: 'LOND', london: 'LOND', amsterda: 'AMS', amsterdam: 'AMS',
+    eindhoven: 'EIN', roterda: 'RTM', rotterdam: 'RTM', madri: 'MAD', madrid: 'MAD', barcelona: 'BCN', 'sao paulo': 'SAO', 'rio de janeiro': 'RIOA', luxemburgo: 'LUX', luxembourg: 'LUX',
+    genebra: 'GVA', geneve: 'GVA', zurique: 'ZRH', zurich: 'ZRH', berlim: 'BER', berlin: 'BER', roma: 'ROME', rome: 'ROME', milao: 'MILA', milan: 'MILA', dublin: 'DUB',
+    colonia: 'CGN', koln: 'CGN', dusseldorf: 'DUS', frankfurt: 'FRA', munique: 'MUC', munich: 'MUC', lyon: 'LYS', marselha: 'MRS', marseille: 'MRS', nice: 'NCE', faro: 'FAO' };
+  const codigoOrigem = () => { const c = (perfil.cidade_base || '').trim(); return /^[A-Za-z]{3,4}$/.test(c) ? c.toUpperCase() : (AEROPORTOS[norm(c)] || (deBruxelas() ? 'BRU' : '')); };
+  const yymmdd = d => d.slice(2).replace(/-/g, '');
+  // Sem cidade: onde está mais barato voar nessas datas
+  function linkQualquerLugar(o) {
+    const org = codigoOrigem(); if (!org) return '';
+    return '<a href="https://www.skyscanner.net/transport/flights/' + org.toLowerCase() + '/anywhere/' + yymmdd(o.inicio) + '/' + yymmdd(o.fim) + '/?rtn=1" target="_blank" rel="noopener">' + t('link.qualquer') + '</a>';
+  }
+  function linksViagem(rotulo, o, p) {
     const cid = achaCidade(p.cidade);
-    const iata = (p.iata || (cid && cid.iata) || '').toUpperCase(), de = perfil.cidade_base || 'Brussels';
-    const voos = 'https://www.google.com/travel/flights?hl=' + loc() + '&q=' + encodeURIComponent('flights from ' + de + ' to ' + (iata || p.cidade) + ' ' + o.inicio + ' to ' + o.fim);
-    const hotel = 'https://www.booking.com/searchresults.html?ss=' + encodeURIComponent(p.cidade) + '&checkin=' + o.inicio + '&checkout=' + o.fim + '&group_adults=1&no_rooms=1&nflt=ht_id%3D204';
+    const iata = (p.iata || (cid && cid.iata) || '').toUpperCase(), de = perfil.cidade_base || 'Brussels', org = codigoOrigem();
+    const voos = org && iata ? 'https://www.skyscanner.net/transport/flights/' + org.toLowerCase() + '/' + iata.toLowerCase() + '/' + yymmdd(o.inicio) + '/' + yymmdd(o.fim) + '/?rtn=1&sortby=price'
+      : 'https://www.google.com/travel/flights?hl=' + loc() + '&q=' + encodeURIComponent('cheapest flights from ' + de + ' to ' + (iata || p.cidade) + ' ' + o.inicio + ' to ' + o.fim);
+    const hotel = 'https://www.booking.com/searchresults.html?ss=' + encodeURIComponent(p.cidade) + '&checkin=' + o.inicio + '&checkout=' + o.fim + '&group_adults=1&no_rooms=1&nflt=ht_id%3D204&order=price';
     const agenda = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(t('agenda.titulo', { c: p.cidade })) +
       '&dates=' + o.inicio.replace(/-/g, '') + '/' + diaSeg(o.fim).replace(/-/g, '') + '&location=' + encodeURIComponent(p.cidade) +
-      '&details=' + encodeURIComponent(t('agenda.det', { n: o.total, f: x.feriado, d: o.tirar.map(fmt).join(', ') || t('nenhumDia') }));
+      '&details=' + encodeURIComponent(t('agenda.det', { n: o.total, f: rotulo, d: o.tirar.map(fmt).join(', ') || t('nenhumDia') }));
     const trem = cid && cid.modo === 'trem' && deBruxelas();
-    return '<div class="acoes esq links">' + (trem ? '<a href="https://www.eurostar.com" target="_blank" rel="noopener">' + t('link.trens') + '</a>' : '<a href="' + voos + '" target="_blank" rel="noopener">' + t('link.voos') + '</a>') +
-      '<a href="' + hotel + '" target="_blank" rel="noopener">' + t('link.hoteis') + '</a><a href="' + agenda + '" target="_blank" rel="noopener">' + t('link.agenda') + '</a></div>';
+    return '<div class="acoes esq links">' + (trem ? '<a href="https://www.eurostar.com" target="_blank" rel="noopener">' + t('link.trens') + '</a>' : '<a href="' + voos + '" target="_blank" rel="noopener">' + t('link.baratos') + '</a>') +
+      '<a href="' + hotel + '" target="_blank" rel="noopener">' + t('link.hoteisBaratos') + '</a><a href="' + agenda + '" target="_blank" rel="noopener">' + t('link.agenda') + '</a></div>';
   }
   function amigosNaTrip(tripId) {
     return planosGrupo.filter(r => r.trip_id === tripId && r.user_id !== user.id && r.status === 'vou')
@@ -323,7 +372,9 @@
     for (let m = 0; m < 12; m++) {
       if (ano === anoHoje && m < hoje.getMonth()) continue;
       const doMes = trips.filter(x => x.mes === m), vis = doMes.filter(x => !escondida(x));
-      html += '<section class="mes"><h2>' + esc(nomeMes(m)) + ' <small>' + esc(vis.length ? (vis.length > 1 ? t('mes.nN', { n: vis.length }) : t('mes.n1')) : doMes.length ? t('mes.escondida') : t('mes.sem')) + '</small></h2>';
+      const livres = livresMinhas().filter(p => +p.inicio.slice(5, 7) - 1 === m && +p.inicio.slice(0, 4) === ano).sort((a, b) => a.inicio.localeCompare(b.inicio));
+      const nv = vis.length + livres.length;
+      html += '<section class="mes"><h2>' + esc(nomeMes(m)) + ' <small>' + esc(nv ? (nv > 1 ? t('mes.nN', { n: nv }) : t('mes.n1')) : doMes.length ? t('mes.escondida') : t('mes.sem')) + '</small></h2>';
       vis.forEach((x, idx) => {
         const p = planos[x.id] || {}, L = p.duracao || x.padrao, o = x.opcoes[L], vou = p.status === 'vou';
         const durs = [3, 4, 5].concat(L > 5 ? [L] : []), cid = ideias(m, L, m + idx), am = amigosNaTrip(x.id);
@@ -339,7 +390,7 @@
               (deBruxelas() ? ' <span class="sub">' + esc(t(c.modo, { t: c.tempo })) + '</span>' : '') + '</button>').join('') + '</div>' : '') + '</div>' +
           '<div class="acoes esq"><button type="button" class="ir" data-acao="vou">' + esc(vou ? t('vouViajar') : t('querIr')) + '</button>' +
             (vou ? '' : '<button type="button" class="leve" data-acao="agora-nao">' + esc(t('agoraNao')) + '</button><button type="button" class="leve" data-acao="ocultar">' + esc(t('naoInteressa')) + '</button>') + '</div>' +
-          (vou && p.cidade ? linksViagem(x, o, p) : vou ? '<div class="sub">' + esc(t('precisaCidade')) + '</div>' : '') +
+          (vou && p.cidade ? linksViagem(x.feriado, o, p) : vou ? '<div class="sub">' + esc(t('precisaCidade')) + '</div><div class="acoes esq links">' + linkQualquerLugar(o) + '</div>' : '') +
           '</article>';
       });
       doMes.filter(escondida).forEach(x => {
@@ -347,10 +398,32 @@
         html += '<div class="oculta"><span>' + esc(x.feriado) + ' · ' + esc(fmt(o.inicio)) + ' → ' + esc(fmt(o.fim)) + ' <small>(' + esc(s ? t('oculta.nao') : t('oculta.agora')) + ')</small></span>' +
           '<button type="button" class="leve" ' + (s ? 'data-volta-sempre="' + esc(x.chave) + '" data-volta-nome="' + esc(x.feriado) + '"' : 'data-volta="' + x.id + '"') + '>' + esc(t('mostrar')) + '</button></div>';
       });
-      if (!doMes.length && todosFer.length) html += '<div class="generico">' + esc(t('generico')) + '</div>';
+      livres.forEach(p => { html += editando && editando.id === p.trip_id ? formLivre(m) : cartaoLivre(p); });
+      if (editando && !editando.id && editando.mes === m) html += formLivre(m);
+      else if (!(editando && editando.mes === m)) html += '<button type="button" class="criar" data-criar="' + m + '">' + esc(t('criarViagem', { mes: nomeMes(m) })) + '</button>';
       html += '</section>';
     }
     $('lista').innerHTML = html;
+  }
+  function cartaoLivre(p) {
+    const o = janelaLivre(p.inicio, p.duracao);
+    return '<article class="trip vou livre" data-livre="' + esc(p.trip_id) + '">' +
+      '<div class="linha1"><div><div class="rotulo">' + esc(t('livre.rotulo')) + '</div><div class="datas">' + esc(fmt(o.inicio)) + ' → ' + esc(fmt(o.fim)) + '</div><div class="sub">' + esc(t('trip.dias', { n: o.total })) + '</div></div>' +
+      '<div class="custo"><b' + (o.custo === 0 ? ' class="zero"' : '') + '>' + esc(nDias(o.custo)) + '</b><span class="sub">' + esc(t('deFerias')) + '</span></div></div>' +
+      '<div class="sub">' + esc(o.tirar.length ? t('pedirFolga', { d: o.tirar.length > 6 ? fmt(o.tirar[0]) + ' … ' + fmt(o.tirar[o.tirar.length - 1]) + ' (' + o.tirar.length + ')' : o.tirar.map(fmt).join(', ') }) : t('semPedir')) + '</div>' +
+      '<div class="form"><label for="c-' + esc(p.trip_id) + '">' + esc(t('cidadeQuero')) + '</label><input type="text" id="c-' + esc(p.trip_id) + '" data-cidade-livre value="' + esc(p.cidade || '') + '" placeholder="' + esc(t('escrevaCidade')) + '" autocomplete="off"></div>' +
+      (p.cidade ? linksViagem(t('livre.rotulo'), o, p) : '<div class="acoes esq links">' + linkQualquerLugar(o) + '</div>') +
+      '<div class="acoes esq"><button type="button" class="leve" data-editar-livre>' + esc(t('editar')) + '</button><button type="button" class="leve" data-apagar-livre>' + esc(t('apagar')) + '</button></div></article>';
+  }
+  function formLivre(m) {
+    const e = editando, o = janelaLivre(e.inicio, e.dias);
+    return '<div class="trip form-livre" data-form-livre>' +
+      '<div class="dupla"><div class="form"><label for="fl-ini">' + esc(t('livre.inicio')) + '</label><input type="date" id="fl-ini" value="' + e.inicio + '" min="' + hojeISO + '"></div>' +
+      '<div class="form"><label for="fl-dias">' + esc(t('livre.dias')) + '</label><input type="number" id="fl-dias" min="1" max="60" value="' + e.dias + '" inputmode="numeric"></div></div>' +
+      '<button type="button" class="leve" data-melhor>' + esc(t('livre.melhor')) + '</button>' +
+      '<div class="linha1"><div><div class="datas">' + esc(fmt(o.inicio)) + ' → ' + esc(fmt(o.fim)) + '</div><div class="sub">' + esc(t('trip.dias', { n: o.total })) + '</div></div>' +
+      '<div class="custo"><b' + (o.custo === 0 ? ' class="zero"' : '') + '>' + esc(nDias(o.custo)) + '</b><span class="sub">' + esc(t('deFerias')) + '</span></div></div>' +
+      '<div class="acoes esq"><button type="button" class="ir" data-salvar-livre>' + esc(t('livre.salvar')) + '</button><button type="button" class="leve" data-cancelar-livre>' + esc(t('cancelar')) + '</button></div></div>';
   }
   $('anos').addEventListener('click', async ev => {
     const b = ev.target.closest('[data-ano]'); if (!b) return;
@@ -358,6 +431,19 @@
     await carregarPlanos(); desenhar();
   });
   $('lista').addEventListener('click', ev => {
+    const criar = ev.target.closest('[data-criar]');
+    if (criar) { const m = +criar.dataset.criar, b = melhorInicio(ano, m, 5) || janelaLivre(new Date(Date.UTC(ano, m, 1)).toISOString().slice(0, 10), 5); editando = { id: null, mes: m, inicio: b.inicio, dias: 5 }; return desenhar(); }
+    if (ev.target.closest('[data-cancelar-livre]')) { editando = null; return desenhar(); }
+    if (ev.target.closest('[data-melhor]')) { const ini = editando.inicio; const b = melhorInicio(+ini.slice(0, 4), +ini.slice(5, 7) - 1, editando.dias); if (b) editando.inicio = b.inicio; return desenhar(); }
+    if (ev.target.closest('[data-salvar-livre]')) {
+      const e = editando, o = janelaLivre(e.inicio, e.dias), id = e.id || 'livre-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const anoViagem = +e.inicio.slice(0, 4); editando = null;
+      if (anoViagem !== ano) { ano = anoViagem; carregarPlanos().then(() => salvarPlano(id, { ano: anoViagem, status: 'vou', inicio: o.inicio, fim: o.fim, duracao: e.dias })); return; }
+      return salvarPlano(id, { ano: anoViagem, status: 'vou', inicio: o.inicio, fim: o.fim, duracao: e.dias });
+    }
+    const cl = ev.target.closest('[data-livre]');
+    if (cl && ev.target.closest('[data-apagar-livre]')) return apagarPlano(cl.dataset.livre);
+    if (cl && ev.target.closest('[data-editar-livre]')) { const p = planos[cl.dataset.livre]; editando = { id: p.trip_id, mes: +p.inicio.slice(5, 7) - 1, inicio: p.inicio, dias: p.duracao }; return desenhar(); }
     const volta = ev.target.closest('[data-volta]'), voltaS = ev.target.closest('[data-volta-sempre]');
     if (volta) return salvarPlano(volta.dataset.volta, { status: null });
     if (voltaS) { const tira = [voltaS.dataset.voltaSempre, voltaS.dataset.voltaNome]; salvarPerfil({ feriados_ocultos: (perfil.feriados_ocultos || []).filter(x => !tira.includes(x)) }); return desenhar(); }
@@ -374,6 +460,10 @@
     }
   });
   $('lista').addEventListener('change', ev => {
+    if (ev.target.id === 'fl-ini' && ev.target.value) { editando.inicio = ev.target.value; return desenhar(); }
+    if (ev.target.id === 'fl-dias') { editando.dias = Math.max(1, Math.min(60, Math.round(+ev.target.value) || 1)); return desenhar(); }
+    const il = ev.target.closest('[data-cidade-livre]');
+    if (il) return salvarPlano(il.closest('[data-livre]').dataset.livre, { cidade: il.value.trim() || null, iata: null });
     const inp = ev.target.closest('[data-cidade]'); if (!inp) return;
     salvarPlano(inp.closest('.trip').dataset.id, { cidade: inp.value.trim() || null, iata: null });
   });
@@ -449,6 +539,11 @@
       '<div class="membros">' + ids.map(id => '<span class="membro">' + mini(id) + esc(nome(id)) + '</span>').join('') + '</div>' +
       '<div class="acoes esq"><button type="button" class="ir" data-convite="' + esc(convite) + '">' + esc(t('copiarConvite')) + '</button><span class="sub">' + esc(t('codigo')) + ' <span class="codigo">' + esc(g.codigo_convite) + '</span></span>' +
       '<button type="button" class="leve" data-sair="' + g.id + '">' + esc(t('sairGrupo')) + '</button></div></div>' +
+      (() => {
+        const lv = planosGrupo.filter(r => ehLivre(r.trip_id) && r.inicio && ids.includes(r.user_id)).sort((a, b) => a.inicio.localeCompare(b.inicio));
+        return lv.length ? '<h3>' + esc(t('grupo.livres', { ano })) + '</h3><div class="cartao">' + lv.map(r => '<div class="grupo"><span>' + mini(r.user_id) + ' <b>' + esc(nome(r.user_id)) + '</b>' + (r.cidade ? ' · ' + esc(r.cidade) : '') + '</span>' +
+          '<span class="sub">' + esc(fmt(r.inicio)) + ' → ' + esc(fmt(r.fim)) + ' · ' + esc(t('trip.dias', { n: r.duracao })) + '</span></div>').join('') + '</div>' : '';
+      })() +
       '<h3>' + esc(t('grupo.titulo', { ano })) + '</h3>' + linhas.map(({ x, vao, nao }) => {
         const o = x.opcoes[x.padrao], livres = ids.filter(id => !vao.some(r => r.user_id === id) && !nao.includes(id));
         return '<div class="trip' + (vao.length > 1 ? ' vou' : '') + '"><div class="linha1"><div><div class="datas" style="font-size:18px">' + esc(fmt(o.inicio)) + ' → ' + esc(fmt(o.fim)) + '</div><div class="sub">' + esc(t('grupo.linha', { f: x.feriado, n: o.total, c: o.custo })) + '</div></div>' +
