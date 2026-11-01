@@ -346,7 +346,7 @@
   const paraSky = c => ({ PAR: 'PARI', LON: 'LOND', ROM: 'ROME', MIL: 'MILA', RIO: 'RIOA' })[c] || c;
   function caixaPreco(o, p, dst) {
     const org = codigoOrigem(); if (!org || o.fim < hojeISO || o.inicio < hojeISO) return '';
-    return '<div class="preco" data-preco data-org="' + esc(AVIA[org] || org) + '" data-dst="' + esc(dst ? (AVIA[dst] || dst) : '') + '" data-ida="' + o.inicio + '" data-volta="' + o.fim +
+    return '<div class="preco" data-preco data-org="' + esc(AVIA[org] || org) + '" data-dst="' + esc(dst ? (AVIA[dst] || dst) : '') + '" data-p-ida="' + o.inicio + '" data-p-volta="' + o.fim +
       '" data-k="' + esc(p.ano + '|' + p.trip_id) + '" data-c="' + esc(p.cidade || '') + '"></div>';
   }
   const precoCache = new Map();
@@ -361,7 +361,7 @@
     document.querySelectorAll('[data-preco]:not([data-ok])').forEach(async el => {
       el.dataset.ok = '1'; el.innerHTML = '<span class="sub">' + esc(t('preco.buscando')) + '</span>';
       const d = el.dataset, moeda = moedaPadrao();
-      const r = await buscarPrecos({ origem: d.org, destino: d.dst || null, ida: d.ida, volta: d.volta, moeda });
+      const r = await buscarPrecos({ origem: d.org, destino: d.dst || null, ida: d.pIda, volta: d.pVolta, moeda });
       if (!el.isConnected) return;
       const res = (r && r.resultados) || [];
       if (!res.length) { el.innerHTML = r ? '<span class="sub">' + esc(t('preco.sem')) + '</span>' : ''; return; }
@@ -399,7 +399,7 @@
     const caixa = b.closest('.preco-real'), d = b.closest('[data-preco]').dataset;
     b.disabled = true; b.textContent = t('real.buscando');
     let r = null;
-    try { const x = await sb.functions.invoke('preco-real', { body: { origem: d.org, destino: d.dst, ida: d.ida, volta: d.volta } }); r = x.error ? null : x.data; } catch (e) { r = null; }
+    try { const x = await sb.functions.invoke('preco-real', { body: { origem: d.org, destino: d.dst, ida: d.pIda, volta: d.pVolta } }); r = x.error ? null : x.data; } catch (e) { r = null; }
     if (!caixa.isConnected) return;
     if (!r || r.erro) { caixa.innerHTML = '<span class="sub">' + esc(t('real.erro')) + '</span>'; return; }
     if (!r.ofertas.length) { caixa.innerHTML = '<span class="sub">' + esc(t('real.nada')) + '</span>'; return; }
