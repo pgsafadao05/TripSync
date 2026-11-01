@@ -135,7 +135,7 @@
   async function abrirApp() {
     $('tela-cadastro').hidden = true; $('tela-app').hidden = false; $('btnPerfil').hidden = false;
     await prepararFeriados();
-    irPara();
+    irPara(); perguntarCompra();
   }
 
   // ---------- Feriados do país da pessoa ----------
@@ -356,8 +356,9 @@
       '&dates=' + o.inicio.replace(/-/g, '') + '/' + diaSeg(o.fim).replace(/-/g, '') + '&location=' + encodeURIComponent(p.cidade) +
       '&details=' + encodeURIComponent(t('agenda.det', { n: o.total, f: rotulo, d: o.tirar.map(fmt).join(', ') || t('nenhumDia') }));
     const trem = cid && cid.modo === 'trem' && deBruxelas();
-    return '<div class="acoes esq links">' + (trem ? '<a href="https://www.eurostar.com" target="_blank" rel="noopener">' + t('link.trens') + '</a>' : '<a href="' + voos + '" target="_blank" rel="noopener">' + t('link.baratos') + '</a>') +
-      '<a href="' + hotel + '" target="_blank" rel="noopener">' + t('link.hoteisBaratos') + '</a><a href="' + agenda + '" target="_blank" rel="noopener">' + t('link.agenda') + '</a></div>';
+    const marca = tipo => ' data-compra="' + tipo + '" data-compra-k="' + esc(p.ano + '|' + p.trip_id) + '" data-compra-c="' + esc(p.cidade) + '"';
+    return '<div class="acoes esq links">' + (trem ? '<a href="https://www.eurostar.com" target="_blank" rel="noopener"' + marca('passagem') + '>' + t('link.trens') + '</a>' : '<a href="' + voos + '" target="_blank" rel="noopener"' + marca('passagem') + '>' + t('link.baratos') + '</a>') +
+      '<a href="' + hotel + '" target="_blank" rel="noopener"' + marca('hotel') + '>' + t('link.hoteisBaratos') + '</a><a href="' + agenda + '" target="_blank" rel="noopener">' + t('link.agenda') + '</a></div>';
   }
   function amigosNaTrip(tripId) {
     return planosGrupo.filter(r => r.trip_id === tripId && r.user_id !== user.id && r.status === 'vou')
@@ -760,6 +761,41 @@
     const ok = await salvarPerfil({ foto_url: url });
     msg('pMsg', ok ? t('ok.foto') : t('err.fotoSalvar'), ok ? 'ok' : 'erro'); desenhar();
   });
+
+  // ---------- "Comprou?" ao voltar de um site de passagem/hotel ----------
+  // A compra acontece fora do app; quando a pessoa volta, perguntamos quanto pagou.
+  const CHAVE_COMPRA = 'tripsync:compra';
+  const lerCompra = () => { try { return JSON.parse(localStorage.getItem(CHAVE_COMPRA) || 'null'); } catch (e) { return null; } };
+  const gravarCompra = v => { try { v ? localStorage.setItem(CHAVE_COMPRA, JSON.stringify(v)) : localStorage.removeItem(CHAVE_COMPRA); } catch (e) {} };
+  document.addEventListener('click', ev => {
+    const a = ev.target.closest('a[data-compra]'); if (!a) return;
+    gravarCompra({ tipo: a.dataset.compra, k: a.dataset.compraK, cidade: a.dataset.compraC, em: Date.now() });
+  });
+  function perguntarCompra() {
+    const c = lerCompra(), box = $('perguntaCompra');
+    if (!c || !user || !perfil || $('tela-app').hidden) return;
+    if (Date.now() - c.em > 864e5) { gravarCompra(null); return; }        // depois de 1 dia, esquece
+    if (Date.now() - c.em < 15e3) return;                                    // voltou rápido demais: só olhou
+    box.innerHTML = '<p class="pergunta-txt"><b>' + esc(t(c.tipo === 'hotel' ? 'compra.hotel' : 'compra.passagem', { c: c.cidade })) + '</b></p>' +
+      '<form id="formCompra" class="linha-form compra"><input type="number" id="compraValor" min="0" step="0.01" inputmode="decimal" placeholder="' + esc(t('compra.quanto')) + '" aria-label="' + esc(t('gastos.valor')) + '" required>' +
+      '<select id="compraMoeda" aria-label="' + esc(t('gastos.moeda')) + '">' + MOEDAS.map(m => '<option' + (m === moedaPadrao() ? ' selected' : '') + '>' + m + '</option>').join('') + '</select>' +
+      '<button class="ir" type="submit">' + esc(t('compra.salvar')) + '</button></form>' +
+      '<div class="acoes esq"><button type="button" class="leve" data-compra-nao>' + esc(t('compra.nao')) + '</button></div>';
+    box.hidden = false; box.scrollIntoView({ block: 'nearest' });
+  }
+  $('perguntaCompra').addEventListener('click', ev => { if (ev.target.closest('[data-compra-nao]')) { gravarCompra(null); $('perguntaCompra').hidden = true; } });
+  $('perguntaCompra').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const c = lerCompra(); if (!c) return;
+    const valor = Math.round(+$('compraValor').value * 100) / 100; if (!(valor >= 0)) return;
+    const [a, ...rest] = c.k.split('|');
+    const { data, error } = await sb.from('gastos').insert({ ano: +a, trip_id: rest.join('|'), tipo: c.tipo, status: 'comprado', valor, moeda: $('compraMoeda').value }).select().single();
+    if (error) return msg('appMsg', t('err.salvarE', { e: error.message }), 'erro');
+    gastos.push(data); gravarCompra(null);
+    $('perguntaCompra').hidden = true; msg('appMsg', t('compra.ok'), 'ok'); desenhar();
+  });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') perguntarCompra(); });
+  window.addEventListener('focus', perguntarCompra);
 
   // Início: textos no idioma do aparelho (ou o último escolhido)
   nomesPaises(); I.aplicar(); opcoesIdioma($('idiomaTopo'));

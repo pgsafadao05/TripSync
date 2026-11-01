@@ -157,3 +157,9 @@ select { font: inherit; color: var(--ink); background: var(--bg); border: 1px so
 .total-ano { color: var(--ink); }
 .gastos > .leve { justify-self: start; }
 .sel-cidade { width: auto; max-width: 100%; padding: 4px 8px; font-size: 13px; }
+.pergunta { border-color: var(--sol); background: var(--sol-bg); }
+.pergunta-txt { margin: 0; }
+.linha-form.compra { grid-template-columns: minmax(0, 1fr) auto auto; }
+.linha-form.compra select { width: auto; }
+.pergunta { grid-template-columns: minmax(0, 1fr); } .linha-form.compra input { min-width: 0; }
+.wrap { grid-template-columns: minmax(0, 1fr); } .wrap > section, .aba { min-width: 0; }
