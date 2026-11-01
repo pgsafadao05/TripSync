@@ -217,7 +217,7 @@
     const ok = await salvarPerfil({ paises_visitados: [...cadPaises], cadastro_completo: true });
     $('fimCad').disabled = false;
     if (!ok) return msg('cMsg2', t('err.salvar'), 'erro');
-    location.hash = 'escapadas'; await abrirApp();
+    history.replaceState(null, '', '#escapadas'); await abrirApp();
   };
 
   // ---------- Dados ----------
@@ -271,7 +271,15 @@
   // ---------- Navegação ----------
   function irPara() { const h = location.hash.slice(1); aba = ['escapadas', 'viagens', 'jafui', 'grupos', 'perfil'].includes(h) ? h : 'escapadas'; desenhar(); }
   window.addEventListener('hashchange', () => { if (user && perfil && perfil.cadastro_completo) irPara(); });
-  $('btnPerfil').onclick = () => { location.hash = 'perfil'; };
+  // Trocar de aba não cria histórico: o botão voltar do celular sai do app, como num app normal
+  const ABAS = ['escapadas', 'viagens', 'jafui', 'grupos', 'perfil'];
+  function irAba(h) { history.replaceState(null, '', '#' + h); if (user && perfil && perfil.cadastro_completo) irPara(); }
+  document.addEventListener('click', ev => {
+    const a = ev.target.closest('a[href^="#"]'); if (!a || ev.defaultPrevented) return;
+    const h = a.getAttribute('href').slice(1); if (!ABAS.includes(h)) return;
+    ev.preventDefault(); irAba(h);
+  });
+  $('btnPerfil').onclick = () => irAba('perfil');
 
   function desenhar() {
     if (!user || !perfil || $('tela-app').hidden) return;
@@ -658,7 +666,7 @@
     const b = ev.target.closest('[data-abrir]'); if (!b) return;
     const a = +b.dataset.abrirAno, id = b.dataset.abrir;
     if (a !== ano && ANOS.includes(a)) { ano = a; try { localStorage.setItem('tripsync:ano', ano); } catch (e) {} await carregarPlanos(); }
-    location.hash = 'escapadas';
+    irAba('escapadas');
     setTimeout(() => { const el = document.querySelector('[data-id="' + id + '"], [data-livre="' + id + '"]'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60);
   });
 
