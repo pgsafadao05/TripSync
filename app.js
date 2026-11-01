@@ -374,7 +374,9 @@
         const v = dinheiro(x.preco, r.moeda), exato = tipo === 'exato';
         const base = exato ? x.link : (r.busca || x.link), href = base ? base + (base.includes('?') ? '&' : '?') + 'currency=' + String(r.moeda).toLowerCase() : null;
         const titulo = exato ? t('preco.aPartir', { v }) : t('preco.verDatas');
-        const detalhe = exato ? (x.cia ? x.cia + ' · ' : '') + escalasTxt(Math.max(x.escalas || 0, x.escalasVolta || 0)) : t('preco.pista.' + tipo, { v, d: datas.replace(/ · $/, '') });
+        const hm = m => m ? Math.floor(m / 60) + 'h' + String(m % 60).padStart(2, '0') : '';
+        const tempos = x.minIda ? ' · ' + t('preco.tempos', { i: hm(x.minIda), v: hm(x.minVolta) || '?' }) : '';
+        const detalhe = exato ? (x.cia ? x.cia + ' · ' : '') + escalasTxt(Math.max(x.escalas || 0, x.escalasVolta || 0)) + tempos : t('preco.pista.' + tipo, { v, d: datas.replace(/ · $/, '') });
         el.innerHTML = '<a class="preco-voo" href="' + esc(href || '#') + '" target="_blank" rel="noopener" data-compra="passagem" data-compra-k="' + esc(d.k) + '" data-compra-c="' + esc(d.c) + '">' +
           '<b>' + esc(titulo) + ' ↗</b><span class="sub">' + esc(detalhe) + '</span></a>' +
           '<span class="sub">' + esc(t(exato ? 'preco.nota.exato' : 'preco.nota.outra')) + '</span>' +
