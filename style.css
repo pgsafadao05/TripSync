@@ -118,3 +118,26 @@ select { font: inherit; color: var(--ink); background: var(--bg); border: 1px so
 .criar:hover { border-color: var(--sol); }
 .form-livre { border-style: dashed; border-color: var(--sol); }
 .trip.livre .rotulo { margin-bottom: 2px; }
+
+/* Minhas viagens */
+.proxima { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.proxima b { font-family: var(--f-display); font-size: 28px; line-height: 1.1; }
+.proxima span { color: var(--muted); font-weight: 600; }
+.legenda { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.legenda > span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.lg.viagem { background: var(--ok-bg); border: 1px solid var(--ok); }
+.lg.folga { background: var(--ok); }
+.lg.feriado { background: var(--sol); }
+.cal { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px 14px; }
+.cal-nome { font-weight: 600; font-size: 13px; text-transform: capitalize; margin-bottom: 4px; }
+.cal-grade { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; font-size: 11px; text-align: center; font-variant-numeric: tabular-nums; }
+.cal-sem { color: var(--muted); font-size: 10px; text-transform: uppercase; }
+.cal-dia { padding: 3px 0; border-radius: 4px; position: relative; }
+.cal-dia.viagem { background: var(--ok-bg); color: var(--ok); font-weight: 600; cursor: pointer; }
+.cal-dia.folga { background: var(--ok); color: var(--surface); }
+.cal-dia.feriado::after { content: ""; position: absolute; left: 50%; bottom: 1px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--sol); }
+.cal-dia.hoje { outline: 1.5px solid var(--ink); outline-offset: -1.5px; }
+.lista-viagens { display: grid; gap: 12px; }
+.passadas summary { cursor: pointer; color: var(--muted); font-weight: 600; padding: 6px 0; }
+.passadas[open] { display: grid; gap: 12px; }

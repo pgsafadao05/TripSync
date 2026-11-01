@@ -44,6 +44,8 @@
     trocarFoto: 'Trocar foto', salvarPerfil: 'Salvar perfil', sair: 'Sair', cidadeSai: 'Cidade de onde você sai', 'ok.perfil': 'Perfil salvo.', 'err.perfilSalvar': 'Não consegui salvar.',
     'err.foto5': 'A foto precisa ter menos de 5 MB.', enviandoFoto: 'Enviando foto…', 'err.foto': 'Não consegui enviar a foto: {e}', 'ok.foto': 'Foto atualizada.', 'err.fotoSalvar': 'Não consegui salvar a foto.',
     criarViagem: '+ Criar minha viagem em {mes}', 'livre.rotulo': 'Minha viagem', 'livre.inicio': 'Começa em', 'livre.dias': 'Quantos dias', 'livre.melhor': 'Achar a data que gasta menos férias', 'livre.salvar': 'Salvar viagem', cancelar: 'Cancelar', apagar: 'Apagar', editar: 'Editar', 'link.baratos': 'Voos mais baratos ↗', 'link.qualquer': 'Pra onde está mais barato voar? ↗', 'link.hoteisBaratos': 'Hotéis mais baratos ↗', 'grupo.livres': 'Viagens que o grupo criou em {ano}',
+    'aba.viagens': 'Minhas viagens', 'viagens.proxima': 'Próxima viagem', 'viagens.agora': 'Viajando agora', 'viagens.emDias': 'em {n} dias', 'viagens.amanha': 'amanhã', 'viagens.nenhuma': 'Você ainda não marcou nenhuma viagem. Em Escapadas, toque em "Quero ir" ou crie a sua viagem.', 'viagens.resumo': '{n} viagens em {ano} · {d} dias de férias usados', 'viagens.calendario': 'Calendário {ano}', 'viagens.cidadeDef': 'Cidade a definir', 'viagens.futuras': 'Programadas', 'viagens.passadas': 'Já passaram ({n})', 'viagens.ver': 'Ver em Escapadas', 'legenda.viagem': 'Viagem', 'legenda.folga': 'Dia de férias', 'legenda.feriado': 'Feriado',
+    'viagens.resumo1': '1 viagem em {ano} · {d} dias de férias usados',
   };
   D.en = {
     'app.sub': 'Holiday getaways, planned with your friends.',
@@ -87,6 +89,8 @@
     trocarFoto: 'Change photo', salvarPerfil: 'Save profile', sair: 'Sign out', cidadeSai: 'City you travel from', 'ok.perfil': 'Profile saved.', 'err.perfilSalvar': "Couldn't save.",
     'err.foto5': 'The photo must be under 5 MB.', enviandoFoto: 'Uploading photo…', 'err.foto': "Couldn't upload the photo: {e}", 'ok.foto': 'Photo updated.', 'err.fotoSalvar': "Couldn't save the photo.",
     criarViagem: '+ Plan my own trip in {mes}', 'livre.rotulo': 'My trip', 'livre.inicio': 'Starts on', 'livre.dias': 'How many days', 'livre.melhor': 'Find the dates that use fewer vacation days', 'livre.salvar': 'Save trip', cancelar: 'Cancel', apagar: 'Delete', editar: 'Edit', 'link.baratos': 'Cheapest flights ↗', 'link.qualquer': 'Where is it cheapest to fly? ↗', 'link.hoteisBaratos': 'Cheapest hotels ↗', 'grupo.livres': 'Trips the group planned in {ano}',
+    'aba.viagens': 'My trips', 'viagens.proxima': 'Next trip', 'viagens.agora': 'Travelling now', 'viagens.emDias': 'in {n} days', 'viagens.amanha': 'tomorrow', 'viagens.nenhuma': "You haven't planned any trips yet. In Getaways, tap \"I want to go\" or plan your own trip.", 'viagens.resumo': '{n} trips in {ano} · {d} vacation days used', 'viagens.calendario': 'Calendar {ano}', 'viagens.cidadeDef': 'City to be decided', 'viagens.futuras': 'Planned', 'viagens.passadas': 'Past trips ({n})', 'viagens.ver': 'See in Getaways', 'legenda.viagem': 'Trip', 'legenda.folga': 'Vacation day', 'legenda.feriado': 'Public holiday',
+    'viagens.resumo1': '1 trip in {ano} · {d} vacation days used',
   };
   D.fr = {
     'app.sub': 'Des escapades pendant les jours fériés, organisées avec vos amis.',
@@ -130,6 +134,8 @@
     trocarFoto: 'Changer la photo', salvarPerfil: 'Enregistrer le profil', sair: 'Se déconnecter', cidadeSai: "Ville d'où vous partez", 'ok.perfil': 'Profil enregistré.', 'err.perfilSalvar': "Impossible d'enregistrer.",
     'err.foto5': 'La photo doit faire moins de 5 Mo.', enviandoFoto: 'Envoi de la photo…', 'err.foto': "Impossible d'envoyer la photo : {e}", 'ok.foto': 'Photo mise à jour.', 'err.fotoSalvar': "Impossible d'enregistrer la photo.",
     criarViagem: '+ Créer mon voyage en {mes}', 'livre.rotulo': 'Mon voyage', 'livre.inicio': 'Commence le', 'livre.dias': 'Combien de jours', 'livre.melhor': 'Trouver les dates qui utilisent le moins de congés', 'livre.salvar': 'Enregistrer le voyage', cancelar: 'Annuler', apagar: 'Supprimer', editar: 'Modifier', 'link.baratos': 'Vols les moins chers ↗', 'link.qualquer': 'Où voler le moins cher ? ↗', 'link.hoteisBaratos': 'Hôtels les moins chers ↗', 'grupo.livres': 'Voyages créés par le groupe en {ano}',
+    'aba.viagens': 'Mes voyages', 'viagens.proxima': 'Prochain voyage', 'viagens.agora': 'En voyage', 'viagens.emDias': 'dans {n} jours', 'viagens.amanha': 'demain', 'viagens.nenhuma': "Vous n'avez encore aucun voyage. Dans Escapades, touchez « Je veux y aller » ou créez votre voyage.", 'viagens.resumo': '{n} voyages en {ano} · {d} jours de congé utilisés', 'viagens.calendario': 'Calendrier {ano}', 'viagens.cidadeDef': 'Ville à choisir', 'viagens.futuras': 'Prévus', 'viagens.passadas': 'Passés ({n})', 'viagens.ver': 'Voir dans Escapades', 'legenda.viagem': 'Voyage', 'legenda.folga': 'Jour de congé', 'legenda.feriado': 'Jour férié',
+    'viagens.resumo1': '1 voyage en {ano} · {d} jours de congé utilisés',
   };
   D.nl = {
     'app.sub': 'Uitstapjes op feestdagen, samen gepland met je vrienden.',
@@ -173,6 +179,8 @@
     trocarFoto: 'Foto wijzigen', salvarPerfil: 'Profiel opslaan', sair: 'Uitloggen', cidadeSai: 'Stad waar je vertrekt', 'ok.perfil': 'Profiel opgeslagen.', 'err.perfilSalvar': 'Opslaan mislukt.',
     'err.foto5': 'De foto moet kleiner zijn dan 5 MB.', enviandoFoto: 'Foto uploaden…', 'err.foto': 'Foto uploaden mislukt: {e}', 'ok.foto': 'Foto bijgewerkt.', 'err.fotoSalvar': 'Foto opslaan mislukt.',
     criarViagem: '+ Eigen reis plannen in {mes}', 'livre.rotulo': 'Mijn reis', 'livre.inicio': 'Begint op', 'livre.dias': 'Hoeveel dagen', 'livre.melhor': 'Zoek de data die het minst verlof kosten', 'livre.salvar': 'Reis opslaan', cancelar: 'Annuleren', apagar: 'Verwijderen', editar: 'Wijzigen', 'link.baratos': 'Goedkoopste vluchten ↗', 'link.qualquer': 'Waar is vliegen het goedkoopst? ↗', 'link.hoteisBaratos': 'Goedkoopste hotels ↗', 'grupo.livres': 'Reizen die de groep plande in {ano}',
+    'aba.viagens': 'Mijn reizen', 'viagens.proxima': 'Volgende reis', 'viagens.agora': 'Nu op reis', 'viagens.emDias': 'over {n} dagen', 'viagens.amanha': 'morgen', 'viagens.nenhuma': 'Je hebt nog geen reizen gepland. Tik bij Uitstapjes op "Ik wil gaan" of plan je eigen reis.', 'viagens.resumo': '{n} reizen in {ano} · {d} vakantiedagen gebruikt', 'viagens.calendario': 'Kalender {ano}', 'viagens.cidadeDef': 'Stad nog te kiezen', 'viagens.futuras': 'Gepland', 'viagens.passadas': 'Voorbij ({n})', 'viagens.ver': 'Bekijk bij Uitstapjes', 'legenda.viagem': 'Reis', 'legenda.folga': 'Vakantiedag', 'legenda.feriado': 'Feestdag',
+    'viagens.resumo1': '1 reis in {ano} · {d} vakantiedagen gebruikt',
   };
   D.es = {
     'app.sub': 'Escapadas en los festivos, organizadas con tus amigos.',
@@ -216,6 +224,8 @@
     trocarFoto: 'Cambiar foto', salvarPerfil: 'Guardar perfil', sair: 'Salir', cidadeSai: 'Ciudad desde donde viajas', 'ok.perfil': 'Perfil guardado.', 'err.perfilSalvar': 'No pude guardar.',
     'err.foto5': 'La foto debe pesar menos de 5 MB.', enviandoFoto: 'Subiendo foto…', 'err.foto': 'No pude subir la foto: {e}', 'ok.foto': 'Foto actualizada.', 'err.fotoSalvar': 'No pude guardar la foto.',
     criarViagem: '+ Crear mi viaje en {mes}', 'livre.rotulo': 'Mi viaje', 'livre.inicio': 'Empieza el', 'livre.dias': 'Cuántos días', 'livre.melhor': 'Buscar las fechas que gastan menos vacaciones', 'livre.salvar': 'Guardar viaje', cancelar: 'Cancelar', apagar: 'Borrar', editar: 'Editar', 'link.baratos': 'Vuelos más baratos ↗', 'link.qualquer': '¿Adónde es más barato volar? ↗', 'link.hoteisBaratos': 'Hoteles más baratos ↗', 'grupo.livres': 'Viajes que el grupo creó en {ano}',
+    'aba.viagens': 'Mis viajes', 'viagens.proxima': 'Próximo viaje', 'viagens.agora': 'De viaje ahora', 'viagens.emDias': 'en {n} días', 'viagens.amanha': 'mañana', 'viagens.nenhuma': 'Todavía no tienes viajes. En Escapadas, toca "Quiero ir" o crea tu viaje.', 'viagens.resumo': '{n} viajes en {ano} · {d} días de vacaciones usados', 'viagens.calendario': 'Calendario {ano}', 'viagens.cidadeDef': 'Ciudad por decidir', 'viagens.futuras': 'Programados', 'viagens.passadas': 'Pasados ({n})', 'viagens.ver': 'Ver en Escapadas', 'legenda.viagem': 'Viaje', 'legenda.folga': 'Día de vacaciones', 'legenda.feriado': 'Festivo',
+    'viagens.resumo1': '1 viaje en {ano} · {d} días de vacaciones usados',
   };
 
   const ok = l => D[l] ? l : null;

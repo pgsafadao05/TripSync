@@ -81,6 +81,7 @@
   <section id="tela-app" hidden>
     <nav class="abas" data-i18n-aria="aria.secoes">
       <a href="#escapadas" data-aba="escapadas" data-i18n="aba.escapadas"></a>
+      <a href="#viagens" data-aba="viagens" data-i18n="aba.viagens"></a>
       <a href="#jafui" data-aba="jafui" data-i18n="aba.jafui"></a>
       <a href="#grupos" data-aba="grupos" data-i18n="aba.amigos"></a>
       <a href="#perfil" data-aba="perfil" data-i18n="aba.perfil"></a>
@@ -93,6 +94,16 @@
         <div class="pill" id="anos" role="group" data-i18n-aria="aria.ano"></div>
       </div>
       <div id="lista" class="lista"></div>
+    </div>
+
+    <div id="aba-viagens" class="aba" hidden>
+      <div class="cartao" id="vResumo"></div>
+      <div class="cartao">
+        <div class="topo2"><h3 id="vCalTitulo"></h3><div class="pill" id="vAnos" role="group" data-i18n-aria="aria.ano"></div></div>
+        <div class="legenda"><span><i class="lg viagem"></i><span data-i18n="legenda.viagem"></span></span><span><i class="lg folga"></i><span data-i18n="legenda.folga"></span></span><span><i class="lg feriado"></i><span data-i18n="legenda.feriado"></span></span></div>
+        <div class="cal" id="vCal"></div>
+      </div>
+      <div id="vLista" class="lista-viagens"></div>
     </div>
 
     <div id="aba-jafui" class="aba" hidden>

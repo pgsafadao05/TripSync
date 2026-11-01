@@ -246,14 +246,16 @@
   async function salvarPlano(tripId, patch) {
     const atual = planos[tripId] || { user_id: user.id, ano, trip_id: tripId };
     const novo = Object.assign({}, atual, patch);
-    planos[tripId] = novo; desenhar();
+    planos[tripId] = novo;
+    if (todosPlanos) { todosPlanos = todosPlanos.filter(r => !(r.trip_id === tripId && r.ano === novo.ano)); todosPlanos.push(novo); }
+    desenhar();
     const { user_id, ano: a, trip_id, status, duracao, cidade, iata, inicio, fim } = novo;
     const { error } = await sb.from('planos').upsert({ user_id, ano: a, trip_id, status: status || null, duracao: duracao || null, cidade: cidade || null, iata: iata || null, inicio: inicio || null, fim: fim || null });
     if (error) msg('appMsg', t('err.salvarE', { e: error.message }), 'erro');
     else { const i = planosGrupo.findIndex(r => r.user_id === user.id && r.trip_id === tripId); if (i >= 0) planosGrupo[i] = novo; else planosGrupo.push(novo); }
   }
   async function apagarPlano(tripId) {
-    delete planos[tripId]; planosGrupo = planosGrupo.filter(r => !(r.user_id === user.id && r.trip_id === tripId)); desenhar();
+    delete planos[tripId]; if (todosPlanos) todosPlanos = todosPlanos.filter(r => r.trip_id !== tripId); planosGrupo = planosGrupo.filter(r => !(r.user_id === user.id && r.trip_id === tripId)); desenhar();
     const { error } = await sb.from('planos').delete().eq('user_id', user.id).eq('trip_id', tripId);
     if (error) msg('appMsg', t('err.salvarE', { e: error.message }), 'erro');
   }
@@ -265,17 +267,18 @@
   }
 
   // ---------- Navegação ----------
-  function irPara() { const h = location.hash.slice(1); aba = ['escapadas', 'jafui', 'grupos', 'perfil'].includes(h) ? h : 'escapadas'; desenhar(); }
+  function irPara() { const h = location.hash.slice(1); aba = ['escapadas', 'viagens', 'jafui', 'grupos', 'perfil'].includes(h) ? h : 'escapadas'; desenhar(); }
   window.addEventListener('hashchange', () => { if (user && perfil && perfil.cadastro_completo) irPara(); });
   $('btnPerfil').onclick = () => { location.hash = 'perfil'; };
 
   function desenhar() {
     if (!user || !perfil || $('tela-app').hidden) return;
     document.querySelectorAll('.abas a').forEach(a => a.setAttribute('aria-current', a.dataset.aba === aba ? 'page' : 'false'));
-    ['escapadas', 'jafui', 'grupos', 'perfil'].forEach(k => { $('aba-' + k).hidden = k !== aba; });
+    ['escapadas', 'viagens', 'jafui', 'grupos', 'perfil'].forEach(k => { $('aba-' + k).hidden = k !== aba; });
     const b = $('btnPerfil');
     if (perfil.foto_url) { b.style.backgroundImage = 'url("' + perfil.foto_url + '")'; b.textContent = ''; } else { b.style.backgroundImage = ''; b.textContent = iniciais(perfil.nome); }
     if (aba === 'escapadas') desenharEscapadas();
+    if (aba === 'viagens') desenharViagens();
     if (aba === 'jafui') desenharJaFui();
     if (aba === 'grupos') desenharGrupos();
     if (aba === 'perfil') desenharPerfil();
@@ -466,6 +469,75 @@
     if (il) return salvarPlano(il.closest('[data-livre]').dataset.livre, { cidade: il.value.trim() || null, iata: null });
     const inp = ev.target.closest('[data-cidade]'); if (!inp) return;
     salvarPlano(inp.closest('.trip').dataset.id, { cidade: inp.value.trim() || null, iata: null });
+  });
+
+  // ---------- Minhas viagens (lista + calendário) ----------
+  let todosPlanos = null, anoCal = null;
+  async function carregarTodosPlanos() {
+    const { data, error } = await sb.from('planos').select('*').eq('user_id', user.id).eq('status', 'vou');
+    if (error) msg('appMsg', t('err.viagens', { e: error.message }), 'erro');
+    todosPlanos = data || [];
+  }
+  function viagensMarcadas() {
+    const mapa = new Map((todosPlanos || []).map(p => [p.ano + '|' + p.trip_id, p]));
+    Object.values(planos).forEach(p => mapa.set(p.ano + '|' + p.trip_id, p));
+    return [...mapa.values()].filter(p => p.status === 'vou').map(p => {
+      let o, rotulo;
+      if (ehLivre(p.trip_id)) { if (!p.inicio) return null; o = janelaLivre(p.inicio, p.duracao); rotulo = t('livre.rotulo'); }
+      else { const x = F.cityTrips(p.ano).find(y => y.id === p.trip_id); if (!x) return null; o = x.opcoes[p.duracao || x.padrao]; rotulo = x.feriado; }
+      return { p, o, rotulo };
+    }).filter(Boolean).sort((a, b) => a.o.inicio.localeCompare(b.o.inicio));
+  }
+  const diasAte = d => Math.round((Date.parse(d + 'T00:00:00Z') - Date.parse(hojeISO + 'T00:00:00Z')) / 864e5);
+  async function desenharViagens() {
+    if (!todosPlanos) await carregarTodosPlanos();
+    if (aba !== 'viagens') return;
+    const vs = viagensMarcadas(), futuras = vs.filter(v => v.o.fim >= hojeISO), passadas = vs.filter(v => v.o.fim < hojeISO).reverse();
+    if (!anoCal) { const y = futuras[0] ? +futuras[0].o.inicio.slice(0, 4) : ano; anoCal = ANOS.includes(y) ? y : ano; }
+    const doAno = vs.filter(v => v.o.inicio.slice(0, 4) === String(anoCal));
+    const prox = futuras[0], agora = prox && prox.o.inicio <= hojeISO;
+    const nomeV = v => v.p.cidade || t('viagens.cidadeDef');
+    $('vResumo').innerHTML = !vs.length ? '<p class="sub">' + esc(t('viagens.nenhuma')) + '</p>' :
+      (prox ? '<div class="rotulo">' + esc(agora ? t('viagens.agora') : t('viagens.proxima')) + '</div><div class="proxima"><b>' + esc(nomeV(prox)) + '</b><span>' +
+        esc(agora ? fmt(prox.o.inicio) + ' → ' + fmt(prox.o.fim) : diasAte(prox.o.inicio) === 1 ? t('viagens.amanha') : t('viagens.emDias', { n: diasAte(prox.o.inicio) })) + '</span></div>' : '') +
+      '<p class="sub">' + esc(t(doAno.length === 1 ? 'viagens.resumo1' : 'viagens.resumo', { n: doAno.length, d: doAno.reduce((s, v) => s + v.o.custo, 0), ano: anoCal })) + '</p>';
+    // calendário do ano
+    $('vCalTitulo').textContent = t('viagens.calendario', { ano: anoCal });
+    $('vAnos').innerHTML = ANOS.map(y => '<button type="button" data-ano-cal="' + y + '" aria-pressed="' + (y === anoCal) + '">' + y + '</button>').join('');
+    const viagemDia = new Map(), folga = new Set(), fer = new Map(F.feriados(anoCal).map(h => [h.data, h.nome]));
+    vs.forEach((v, i) => { for (let k = 0; k < v.o.total; k++) viagemDia.set(somaDias(v.o.inicio, k), i); v.o.tirar.forEach(d => folga.add(d)); });
+    const sem = [...Array(7)].map((_, i) => new Intl.DateTimeFormat(loc(), { weekday: 'narrow', timeZone: 'UTC' }).format(Date.UTC(2024, 0, 1 + i))); // 1/1/2024 = segunda
+    let cal = '';
+    for (let m = 0; m < 12; m++) {
+      const n = new Date(Date.UTC(anoCal, m + 1, 0)).getUTCDate(), pula = (new Date(Date.UTC(anoCal, m, 1)).getUTCDay() + 6) % 7;
+      cal += '<div class="cal-mes"><div class="cal-nome">' + esc(nomeMes(m)) + '</div><div class="cal-grade">' + sem.map(d => '<span class="cal-sem">' + esc(d) + '</span>').join('') + '<span></span>'.repeat(pula);
+      for (let d = 1; d <= n; d++) {
+        const iso = anoCal + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0'), vi = viagemDia.get(iso);
+        const cls = [vi != null ? 'viagem' : '', folga.has(iso) ? 'folga' : '', fer.has(iso) ? 'feriado' : '', iso === hojeISO ? 'hoje' : ''].filter(Boolean).join(' ');
+        const tit = [fer.get(iso), vi != null ? nomeV(vs[vi]) : ''].filter(Boolean).join(' · ');
+        cal += '<span class="cal-dia ' + cls + '"' + (vi != null ? ' data-vi="' + vi + '"' : '') + (tit ? ' title="' + esc(tit) + '"' : '') + '>' + d + '</span>';
+      }
+      cal += '</div></div>';
+    }
+    $('vCal').innerHTML = cal;
+    // lista
+    const cartao = (v, i) => '<article class="trip vou" id="v-' + i + '"><div class="linha1"><div><div class="rotulo">' + esc(v.rotulo) + '</div><div class="datas">' + esc(nomeV(v)) + '</div>' +
+      '<div class="sub">' + esc(fmt(v.o.inicio)) + ' → ' + esc(fmt(v.o.fim)) + ' · ' + esc(t('trip.dias', { n: v.o.total })) + '</div></div>' +
+      '<div class="custo"><b' + (v.o.custo === 0 ? ' class="zero"' : '') + '>' + esc(nDias(v.o.custo)) + '</b><span class="sub">' + esc(t('deFerias')) + '</span></div></div>' +
+      '<div class="sub">' + esc(v.o.tirar.length ? t('pedirFolga', { d: v.o.tirar.length > 6 ? fmt(v.o.tirar[0]) + ' … ' + fmt(v.o.tirar[v.o.tirar.length - 1]) + ' (' + v.o.tirar.length + ')' : v.o.tirar.map(fmt).join(', ') }) : t('semPedir')) + '</div>' +
+      (v.p.cidade ? linksViagem(v.rotulo, v.o, v.p) : '<div class="acoes esq links">' + linkQualquerLugar(v.o) + '</div>') +
+      '<div class="acoes esq"><button type="button" class="leve" data-abrir="' + esc(v.p.trip_id) + '" data-abrir-ano="' + v.p.ano + '">' + esc(t('viagens.ver')) + '</button></div></article>';
+    $('vLista').innerHTML = (futuras.length ? '<h3>' + esc(t('viagens.futuras')) + '</h3>' + futuras.map(v => cartao(v, vs.indexOf(v))).join('') : '') +
+      (passadas.length ? '<details class="passadas"><summary>' + esc(t('viagens.passadas', { n: passadas.length })) + '</summary>' + passadas.map(v => cartao(v, vs.indexOf(v))).join('') + '</details>' : '');
+  }
+  $('vAnos').addEventListener('click', ev => { const b = ev.target.closest('[data-ano-cal]'); if (b) { anoCal = +b.dataset.anoCal; desenharViagens(); } });
+  $('vCal').addEventListener('click', ev => { const d = ev.target.closest('[data-vi]'); if (d) { const c = $('v-' + d.dataset.vi); if (c) { if (c.closest('details')) c.closest('details').open = true; c.scrollIntoView({ behavior: 'smooth', block: 'center' }); } } });
+  $('vLista').addEventListener('click', async ev => {
+    const b = ev.target.closest('[data-abrir]'); if (!b) return;
+    const a = +b.dataset.abrirAno, id = b.dataset.abrir;
+    if (a !== ano && ANOS.includes(a)) { ano = a; try { localStorage.setItem('tripsync:ano', ano); } catch (e) {} await carregarPlanos(); }
+    location.hash = 'escapadas';
+    setTimeout(() => { const el = document.querySelector('[data-id="' + id + '"], [data-livre="' + id + '"]'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60);
   });
 
   // ---------- Já fui ----------
