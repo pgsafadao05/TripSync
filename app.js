@@ -377,7 +377,8 @@
         const detalhe = exato ? (x.cia ? x.cia + ' · ' : '') + escalasTxt(x.escalas) : t('preco.pista.' + tipo, { v, d: datas.replace(/ · $/, '') });
         el.innerHTML = '<a class="preco-voo" href="' + esc(href || '#') + '" target="_blank" rel="noopener" data-compra="passagem" data-compra-k="' + esc(d.k) + '" data-compra-c="' + esc(d.c) + '">' +
           '<b>' + esc(titulo) + ' ↗</b><span class="sub">' + esc(detalhe) + '</span></a>' +
-          '<span class="sub">' + esc(t(exato ? 'preco.nota.exato' : 'preco.nota.outra')) + '</span>';
+          '<span class="sub">' + esc(t(exato ? 'preco.nota.exato' : 'preco.nota.outra')) + '</span>' +
+          '<div class="preco-real" data-busca="' + esc(href || '') + '"><button type="button" class="leve" data-real>' + esc(t('real.botao')) + '</button></div>';
       } else {
         el.innerHTML = '<div class="sub">' + esc(t(tipo === 'ida' ? 'preco.destinosIda' : 'preco.destinos')) + '</div><div class="chips">' + res.slice(0, 8).map(x =>
           '<button type="button" class="chip" data-destino="' + esc(x.destino) + '" data-destino-nome="' + esc(x.nome) + '" data-destino-k="' + esc(d.k) + '">' + bandeira(x.pais) + ' ' + esc(x.nome) +
@@ -390,6 +391,23 @@
     const b = ev.target.closest('[data-destino]'); if (!b) return;
     const id = b.dataset.destinoK.split('|').slice(1).join('|');
     salvarPlano(id, { cidade: b.dataset.destinoNome, iata: b.dataset.destino });
+  });
+  // Preço real na hora (Duffel, função "preco-real"): só quando a pessoa pede, porque cada busca tem custo
+  const horaCurta = iso => { try { return new Intl.DateTimeFormat(loc(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }).format(new Date(String(iso).slice(0, 16) + 'Z')); } catch (e) { return iso; } };
+  document.addEventListener('click', async ev => {
+    const b = ev.target.closest('[data-real]'); if (!b) return;
+    const caixa = b.closest('.preco-real'), d = b.closest('[data-preco]').dataset;
+    b.disabled = true; b.textContent = t('real.buscando');
+    let r = null;
+    try { const x = await sb.functions.invoke('preco-real', { body: { origem: d.org, destino: d.dst, ida: d.ida, volta: d.volta } }); r = x.error ? null : x.data; } catch (e) { r = null; }
+    if (!caixa.isConnected) return;
+    if (!r || r.erro) { caixa.innerHTML = '<span class="sub">' + esc(t('real.erro')) + '</span>'; return; }
+    if (!r.ofertas.length) { caixa.innerHTML = '<span class="sub">' + esc(t('real.nada')) + '</span>'; return; }
+    const trecho = s => s ? s.de + '→' + s.para + ' ' + horaCurta(s.sai) + ' · ' + escalasTxt(s.escalas) : '';
+    caixa.innerHTML = '<div class="rotulo">' + esc(t('real.titulo')) + (r.teste ? ' · ' + esc(t('real.teste')) : '') + '</div>' + r.ofertas.map((o, i) =>
+      '<a class="preco-voo' + (i ? ' secundario' : '') + '" href="' + esc(caixa.dataset.busca || '#') + '" target="_blank" rel="noopener" data-compra="passagem" data-compra-k="' + esc(d.k) + '" data-compra-c="' + esc(d.c) + '">' +
+      '<b>' + esc(dinheiro(o.preco, o.moeda)) + (o.cia ? ' · ' + esc(o.cia) : '') + '</b><span class="sub">' + esc(trecho(o.ida)) + '<br>' + esc(trecho(o.volta)) + '</span></a>').join('') +
+      '<span class="sub">' + esc(t('real.nota')) + '</span>';
   });
   // Sem cidade: onde está mais barato voar nessas datas
   function linkQualquerLugar(o) {
